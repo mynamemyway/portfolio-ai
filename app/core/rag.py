@@ -1,5 +1,6 @@
 # app/core/rag.py
 
+import sys
 import logging
 from typing import List
 
@@ -132,3 +133,13 @@ def _load_and_split_documents() -> List[Document]:
     chunked_documents = text_splitter.split_documents(documents)
 
     return chunked_documents
+
+
+if __name__ == "__main__":
+    # This block allows the script to be run directly from the command line.
+    # It configures basic logging and calls the main orchestration function.
+    logging.basicConfig(
+        level=logging.INFO,
+        stream=sys.stdout,
+    )
+    create_vector_store()
