@@ -1,0 +1,19 @@
+# Telegram Bot Framework
+aiogram==3.10.0
+
+# Configuration Management
+pydantic-settings==2.10.1
+python-dotenv==1.0.1
+
+# LLM Orchestration & Integration
+langchain==0.2.11
+langchain-mistralai==0.1.9
+langchain-community==0.2.10
+mistralai==1.9.2
+
+# Vector Database & Embeddings
+chromadb==0.5.4
+sentence-transformers==3.0.1
+
+# Async Database Driver
+aiosqlite==0.20.0
