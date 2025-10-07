@@ -120,6 +120,12 @@ def _load_and_split_documents() -> List[Document]:
     Returns:
         A list of Document objects, each representing a chunk.
     """
+    # Pre-flight check to ensure the knowledge base directory exists.
+    if not KNOWLEDGE_BASE_DIR.is_dir():
+        logging.error(f"Knowledge base directory not found: '{KNOWLEDGE_BASE_DIR}'")
+        logging.error("Please create it and add your markdown documents before running the script.")
+        return []
+
     # 1. Load documents from the specified directory
     loader = DirectoryLoader(str(KNOWLEDGE_BASE_DIR), glob="**/*.md", show_progress=True)
     documents = loader.load()
