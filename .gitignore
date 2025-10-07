@@ -9,9 +9,8 @@ chroma_db/
 app/knowledge_base/*
 !app/knowledge_base/.gitkeep
 
-# Ignore local chat history database and its journal
-chat_history.sqlite3
-chat_history.sqlite3-journal
+# Ignore local databases directory
+app/db/
 
 # Ignore development documentation folder
 4dev/
