@@ -15,5 +15,7 @@ mistralai==1.9.2
 # Vector Database & Embeddings
 chromadb==0.5.4
 
+# unstructured==0.15.0 - Perspective instead of TextLoader
+
 # Async Database Driver
 aiosqlite==0.20.0
