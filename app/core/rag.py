@@ -1,7 +1,12 @@
 # app/core/rag.py
 
+from typing import List
+
+from langchain_community.document_loaders import DirectoryLoader
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_mistralai.embeddings import MistralAIEmbeddings
 
 from app.config import settings
@@ -70,3 +75,28 @@ def get_vector_store() -> Chroma:
         persist_directory=str(CHROMA_PERSIST_DIR), embedding_function=embeddings
     )
     return vector_store
+
+
+# --- Document Loading and Splitting ---
+
+def _load_and_split_documents() -> List[Document]:
+    """
+    Loads documents from the knowledge base directory and splits them into
+    manageable chunks for vectorization.
+
+    Returns:
+        A list of Document objects, each representing a chunk.
+    """
+    # 1. Load documents from the specified directory
+    loader = DirectoryLoader(str(KNOWLEDGE_BASE_DIR), glob="**/*.md", show_progress=True)
+    documents = loader.load()
+
+    # 2. Initialize a text splitter
+    # chunk_size: The maximum number of characters in a chunk.
+    # chunk_overlap: The number of characters to overlap between chunks to maintain context.
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+
+    # 3. Split the loaded documents into chunks
+    chunked_documents = text_splitter.split_documents(documents)
+
+    return chunked_documents
