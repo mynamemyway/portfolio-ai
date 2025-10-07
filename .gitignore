@@ -12,6 +12,9 @@ chat_history.sqlite3-journal
 # Ignore development documentation folder
 4dev/
 
+# macOS specific
+.DS_Store
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
