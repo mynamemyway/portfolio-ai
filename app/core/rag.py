@@ -1,5 +1,6 @@
 # app/core/rag.py
 
+from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_mistralai.embeddings import MistralAIEmbeddings
 
@@ -53,3 +54,19 @@ def get_embedding_model():
     # )
 
     return embeddings
+
+
+# --- Vector Store Initialization ---
+
+def get_vector_store() -> Chroma:
+    """
+    Initializes and returns the Chroma vector store.
+
+    It uses the embedding model created by get_embedding_model and sets up
+    a persistent directory to save the database on disk.
+    """
+    embeddings = get_embedding_model()
+    vector_store = Chroma(
+        persist_directory=str(CHROMA_PERSIST_DIR), embedding_function=embeddings
+    )
+    return vector_store
