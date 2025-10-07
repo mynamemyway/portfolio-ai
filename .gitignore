@@ -1,4 +1,15 @@
-# added manually
+### Portfolio-AI Project Specific ###
+# Ignore local environment variables
+.env
+
+# Ignore local vector database
+chroma_db/
+
+# Ignore local chat history database and its journal
+chat_history.sqlite3
+chat_history.sqlite3-journal
+
+# Ignore development documentation folder
 4dev/
 
 
@@ -61,9 +72,6 @@ cover/
 
 # Django stuff:
 *.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
 
 # Flask stuff:
 instance/
