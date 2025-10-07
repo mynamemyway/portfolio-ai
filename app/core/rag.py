@@ -4,7 +4,7 @@ import sys
 import logging
 from typing import List
 
-from langchain_community.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
@@ -23,7 +23,8 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent.parent.parent
 
 # Directory for the knowledge base source documents.
-KNOWLEDGE_BASE_DIR = ROOT_DIR / "knowledge_base"
+# The knowledge base is located within the 'app' directory.
+KNOWLEDGE_BASE_DIR = Path(__file__).parent.parent / "knowledge_base"
 
 # Directory where the local ChromaDB vector store will be persisted.
 CHROMA_PERSIST_DIR = ROOT_DIR / "chroma_db"
@@ -126,17 +127,33 @@ def _load_and_split_documents() -> List[Document]:
         logging.error("Please create it and add your markdown documents before running the script.")
         return []
 
-    # 1. Load documents from the specified directory
-    loader = DirectoryLoader(str(KNOWLEDGE_BASE_DIR), glob="**/*.md", show_progress=True)
-    documents = loader.load()
+    # 1. Find and load all markdown documents from the directory
+    md_files = list(KNOWLEDGE_BASE_DIR.glob("**/*.md"))
+    if not md_files:
+        logging.warning(f"No markdown files (.md) found in '{KNOWLEDGE_BASE_DIR}'.")
+        return []
 
-    # 2. Initialize a text splitter
+    logging.info(f"Found {len(md_files)} document(s) to load.")
+
+    all_documents: List[Document] = []
+    for doc_path in md_files:
+        try:
+            loader = TextLoader(str(doc_path), encoding="utf-8")
+            all_documents.extend(loader.load())
+        except Exception as e:
+            logging.error(f"Error loading document {doc_path}: {e}")
+
+    if not all_documents:
+        logging.error("Could not load any documents. Aborting.")
+        return []
+
+    # 2. Initialize a text splitter for chunking
     # chunk_size: The maximum number of characters in a chunk.
     # chunk_overlap: The number of characters to overlap between chunks to maintain context.
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 
     # 3. Split the loaded documents into chunks
-    chunked_documents = text_splitter.split_documents(documents)
+    chunked_documents = text_splitter.split_documents(all_documents)
 
     return chunked_documents
 
