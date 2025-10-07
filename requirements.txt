@@ -1,9 +1,10 @@
 # Telegram Bot Framework
-aiogram==3.10.0
+aiogram==3.22.0
 
 # Configuration Management
 pydantic-settings==2.10.1
 python-dotenv==1.0.1
+pydantic==2.10.3
 
 # LLM Orchestration & Integration
 langchain==0.2.11
@@ -13,7 +14,8 @@ mistralai==1.9.2
 
 # Vector Database & Embeddings
 chromadb==0.5.4
-sentence-transformers==3.0.1
+
+# unstructured==0.15.0 - Perspective instead of TextLoader
 
 # Async Database Driver
 aiosqlite==0.20.0

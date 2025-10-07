@@ -5,9 +5,12 @@
 # Ignore local vector database
 chroma_db/
 
-# Ignore local chat history database and its journal
-chat_history.sqlite3
-chat_history.sqlite3-journal
+# Ignore knowledge base documents, but keep the directory
+app/knowledge_base/*
+!app/knowledge_base/.gitkeep
+
+# Ignore local databases directory
+app/db/
 
 # Ignore development documentation folder
 4dev/
