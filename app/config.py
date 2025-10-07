@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # Mistral AI API Key
     MISTRAL_API_KEY: str
 
+    # Number of messages to keep in the conversation window memory
+    MEMORY_WINDOW_SIZE: int = 10
+
     # Pydantic model configuration
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
