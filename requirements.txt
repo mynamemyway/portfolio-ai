@@ -14,7 +14,6 @@ mistralai==1.9.2
 
 # Vector Database & Embeddings
 chromadb==0.5.4
-sentence-transformers==3.0.1
 
 # Async Database Driver
 aiosqlite==0.20.0
