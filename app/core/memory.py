@@ -12,6 +12,8 @@ from langchain_core.messages import (
     message_to_dict,
 )
 
+from app.config import settings
+
 # --- Constants ---
 
 # Define the root directory of the project.
@@ -134,7 +136,7 @@ def get_chat_memory(session_id: str) -> ConversationBufferWindowMemory:
 
     return ConversationBufferWindowMemory(
         chat_memory=chat_history,
-        k=10,  # Number of last messages to keep in memory
+        k=settings.MEMORY_WINDOW_SIZE,
         return_messages=True,
         memory_key="chat_history",  # Key for chain integration
     )
