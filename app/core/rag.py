@@ -1,5 +1,6 @@
 # app/core/rag.py
 
+import logging
 from typing import List
 
 from langchain_community.document_loaders import DirectoryLoader
@@ -75,6 +76,37 @@ def get_vector_store() -> Chroma:
         persist_directory=str(CHROMA_PERSIST_DIR), embedding_function=embeddings
     )
     return vector_store
+
+
+# --- Main Indexing Function ---
+
+def create_vector_store():
+    """
+    Orchestrates the entire process of creating the vector store:
+    1. Loads and splits documents from the knowledge base.
+    2. Initializes the vector store.
+    3. Adds the documents to the store, triggering vectorization.
+    """
+    logging.info("Starting to create vector store...")
+
+    # 1. Load and split documents
+    chunked_documents = _load_and_split_documents()
+
+    if not chunked_documents:
+        logging.warning(
+            "No documents found or processed. Vector store not created."
+        )
+        return
+
+    logging.info(f"Loaded and split {len(chunked_documents)} document chunks.")
+
+    # 2. Get the vector store instance
+    vector_store = get_vector_store()
+
+    # 3. Add documents to the vector store
+    logging.info("Adding documents to the vector store... This may take a moment.")
+    vector_store.add_documents(documents=chunked_documents)
+    logging.info("Vector store created and documents indexed successfully.")
 
 
 # --- Document Loading and Splitting ---
