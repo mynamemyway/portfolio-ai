@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import aiosqlite
+from langchain.memory import ConversationBufferWindowMemory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.messages import (
     BaseMessage,
@@ -111,3 +112,29 @@ class SQLiteChatMessageHistory(BaseChatMessageHistory):
                 "DELETE FROM chat_history WHERE session_id = ?", (self.session_id,)
             )
             await db.commit()
+
+
+# --- Memory Factory ---
+
+def get_chat_memory(session_id: str) -> ConversationBufferWindowMemory:
+    """
+    Factory function to create and return a memory object for a given session.
+
+    This function encapsulates the creation of a chat history store and
+    wires it into a LangChain memory object with a fixed-size window.
+
+    Args:
+        session_id: The unique identifier for the chat session.
+
+    Returns:
+        An instance of ConversationBufferWindowMemory configured with
+        SQLite-backed history.
+    """
+    chat_history = SQLiteChatMessageHistory(session_id=session_id)
+
+    return ConversationBufferWindowMemory(
+        chat_memory=chat_history,
+        k=10,  # Number of last messages to keep in memory
+        return_messages=True,
+        memory_key="chat_history",  # Key for chain integration
+    )
