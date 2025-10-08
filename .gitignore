@@ -13,7 +13,7 @@ app/knowledge_base/*
 app/db/
 
 # Ignore development documentation folder
-4dev/
+4dev/archive/
 
 # macOS specific
 .DS_Store
