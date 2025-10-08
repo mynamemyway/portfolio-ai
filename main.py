@@ -23,7 +23,7 @@ async def handle_start(message: Message):
     Sends a welcome message to the user explaining the bot's purpose.
     """
     welcome_message = (
-        "Здравствуйте! Я — ваш персональный AI-ассистент по портфолио. "
+        "Доброго дня! Я — ваш персональный AI-ассистент по портфолио. "
         "Я здесь, чтобы ответить на ваши вопросы об опыте, проектах и "
         "технических навыках специалиста. Задайте мне вопрос."
     )
