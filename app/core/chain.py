@@ -76,8 +76,7 @@ def get_rag_chain():
         RunnablePassthrough.assign(
             chat_history=RunnableLambda(
                 lambda x: get_chat_memory(x["session_id"]).load_memory_variables({})
-            ).map()
-            | itemgetter("chat_history")
+            ) | itemgetter("chat_history")
         )
         | rag_chain
     )
