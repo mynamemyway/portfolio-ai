@@ -5,7 +5,8 @@ import logging
 import sys
 
 from aiogram import Bot, Dispatcher, F, Router
-from aiogram.types import CommandStart, Message
+from aiogram.filters import CommandStart
+from aiogram.types import Message
 from langchain_core.messages import AIMessage, HumanMessage
 
 from app.config import settings
