@@ -3,6 +3,7 @@
 import time
 import sys
 import logging
+import httpx
 from typing import List
 
 from langchain_community.document_loaders import TextLoader # Keep for now, will be replaced later
@@ -55,9 +56,15 @@ def get_embedding_model():
     Alternative (Local): HuggingFaceEmbeddings. Requires installing
     sentence-transformers and its heavy dependencies (e.g., torch).
     """
+    # Configure a transport with retry logic for transient errors (e.g., 429, 5xx)
+    transport = httpx.AsyncHTTPTransport(retries=5)
+    async_client = httpx.AsyncClient(transport=transport)
+
     # Primary option for production using Mistral's API
     embeddings = MistralAIEmbeddings(
-        model=MISTRAL_EMBEDDING_MODEL, mistral_api_key=settings.MISTRAL_API_KEY
+        model=MISTRAL_EMBEDDING_MODEL,
+        mistral_api_key=settings.MISTRAL_API_KEY,
+        async_client=async_client,
     )
 
     # --- Alternative for local development (commented out) ---
