@@ -46,19 +46,25 @@ async def handle_message(message: Message, bot: Bot):
 
     # 3. Get the RAG chain and invoke it with the user's question
     rag_chain = get_rag_chain()
-    ai_response = await rag_chain.ainvoke(
-        {"session_id": session_id, "question": user_question}
-    )
+    try:
+        ai_response = await rag_chain.ainvoke(
+            {"session_id": session_id, "question": user_question}
+        )
 
-    # 4. Send the generated response back to the user
-    await message.answer(ai_response)
+        # 4. Send the generated response back to the user
+        await message.answer(ai_response)
 
-    # 5. Manually save the context to the chat history
-    # The RAG chain loads history, but saving is handled here.
-    memory = get_chat_memory(session_id=session_id)
-    await memory.chat_memory.add_messages(
-        [HumanMessage(content=user_question), AIMessage(content=ai_response)]
-    )
+        # 5. Manually save the context to the chat history
+        # The RAG chain loads history, but saving is handled here.
+        memory = get_chat_memory(session_id=session_id)
+        await memory.chat_memory.add_messages(
+            [HumanMessage(content=user_question), AIMessage(content=ai_response)]
+        )
+    except Exception as e:
+        # Log the full error for debugging purposes
+        logging.error(f"Error processing message for user {session_id}: {e}", exc_info=True)
+        # Inform the user that an error occurred
+        await message.answer("К сожалению, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.")
 
 
 async def main() -> None:
