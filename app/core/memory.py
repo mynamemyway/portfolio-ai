@@ -105,6 +105,32 @@ class SQLiteChatMessageHistory(BaseChatMessageHistory):
             )
             await db.commit()
 
+    async def add_messages(self, messages: list[BaseMessage]) -> None:
+        """
+        Asynchronously adds a list of messages to the history for the current session.
+
+        This method is optimized for batch insertion using `executemany`.
+
+        Args:
+            messages: A list of BaseMessage objects to add.
+        """
+        if not messages:
+            return
+
+        await self._create_table_if_not_exists()
+
+        # Serialize all messages and prepare them for batch insertion
+        serialized_messages = [
+            (self.session_id, json.dumps(message_to_dict(msg))) for msg in messages
+        ]
+
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.executemany(
+                "INSERT INTO chat_history (session_id, message) VALUES (?, ?)",
+                serialized_messages,
+            )
+            await db.commit()
+
     async def clear(self) -> None:
         """
         Asynchronously clears all message history for the current session.
