@@ -20,3 +20,6 @@ langchain-chroma==0.1.2
 
 # Async Database Driver
 aiosqlite==0.20.0
+
+# HTTP Client with retry capabilities
+httpx==0.28.1
