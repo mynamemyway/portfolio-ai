@@ -4,10 +4,13 @@ import asyncio
 import logging
 import sys
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F, Router
+from aiogram.types import CommandStart, Message
+from langchain_core.messages import AIMessage, HumanMessage
 
 from app.config import settings
-
+from app.core.chain import get_rag_chain
+from app.core.memory import get_chat_memory
 
 async def main() -> None:
     """
