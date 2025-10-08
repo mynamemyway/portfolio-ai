@@ -39,7 +39,7 @@ MISTRAL_EMBEDDING_MODEL = "mistral-embed"
 HF_EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 
 # --- Batching Constants for Indexing ---
-EMBEDDING_BATCH_SIZE = 32  # Number of documents to process in one batch
+EMBEDDING_BATCH_SIZE = 16  # Number of documents to process in one batch
 EMBEDDING_BATCH_DELAY = 1  # Delay in seconds between batches
 
 
