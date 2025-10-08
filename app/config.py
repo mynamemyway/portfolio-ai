@@ -17,6 +17,14 @@ class Settings(BaseSettings):
     # Number of messages to keep in the conversation window memory
     MEMORY_WINDOW_SIZE: int = 10
 
+    # The specific chat model to use from Mistral AI
+    MISTRAL_CHAT_MODEL: str = "mistral-small-latest"
+
+    # Disable anonymous telemetry for ChromaDB to prevent errors and unnecessary network requests.
+    # See: https://docs.trychroma.com/telemetry
+    # The value should be a string 'False' as ChromaDB checks for the string representation.
+    ANONYMIZED_TELEMETRY: str = "False"
+
     # Pydantic model configuration
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

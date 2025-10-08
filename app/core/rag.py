@@ -1,11 +1,13 @@
 # app/core/rag.py
 
+import time
 import sys
 import logging
+import httpx
 from typing import List
 
-from langchain_community.document_loaders import TextLoader
-from langchain_community.vectorstores import Chroma
+from langchain_community.document_loaders import TextLoader # Keep for now, will be replaced later
+from langchain_chroma import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -37,6 +39,10 @@ MISTRAL_EMBEDDING_MODEL = "mistral-embed"
 # Alternative embedding model for local development (requires heavy dependencies).
 HF_EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 
+# --- Batching Constants for Indexing ---
+EMBEDDING_BATCH_SIZE = 16  # Number of documents to process in one batch
+EMBEDDING_BATCH_DELAY = 1  # Delay in seconds between batches
+
 
 # --- Embedding Model Initialization ---
 
@@ -50,9 +56,15 @@ def get_embedding_model():
     Alternative (Local): HuggingFaceEmbeddings. Requires installing
     sentence-transformers and its heavy dependencies (e.g., torch).
     """
+    # Configure a transport with retry logic for transient errors (e.g., 429, 5xx)
+    transport = httpx.AsyncHTTPTransport(retries=5)
+    async_client = httpx.AsyncClient(transport=transport)
+
     # Primary option for production using Mistral's API
     embeddings = MistralAIEmbeddings(
-        model=MISTRAL_EMBEDDING_MODEL, mistral_api_key=settings.MISTRAL_API_KEY
+        model=MISTRAL_EMBEDDING_MODEL,
+        mistral_api_key=settings.MISTRAL_API_KEY,
+        async_client=async_client,
     )
 
     # --- Alternative for local development (commented out) ---
@@ -105,9 +117,25 @@ def create_vector_store():
     # 2. Get the vector store instance
     vector_store = get_vector_store()
 
-    # 3. Add documents to the vector store
-    logging.info("Adding documents to the vector store... This may take a moment.")
-    vector_store.add_documents(documents=chunked_documents)
+    # 3. Add documents to the vector store in batches to avoid rate limiting
+    logging.info("Adding documents to the vector store in batches...")
+    total_chunks = len(chunked_documents)
+    num_batches = (total_chunks + EMBEDDING_BATCH_SIZE - 1) // EMBEDDING_BATCH_SIZE
+
+    for i in range(0, total_chunks, EMBEDDING_BATCH_SIZE):
+        batch = chunked_documents[i:i + EMBEDDING_BATCH_SIZE]
+        batch_num = (i // EMBEDDING_BATCH_SIZE) + 1
+        logging.info(f"Processing batch {batch_num}/{num_batches}...")
+
+        vector_store.add_documents(documents=batch)
+
+        # Add a delay between batches to avoid rate limiting, but not after the last batch
+        if i + EMBEDDING_BATCH_SIZE < total_chunks:
+            logging.info(
+                f"Waiting for {EMBEDDING_BATCH_DELAY} second(s) before next batch..."
+            )
+            time.sleep(EMBEDDING_BATCH_DELAY)
+
     logging.info("Vector store created and documents indexed successfully.")
 
 
