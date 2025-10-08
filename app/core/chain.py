@@ -27,6 +27,25 @@ SYSTEM_PROMPT = """
 # --- Chain Creation ---
 
 
+async def _get_async_chat_history(x: dict) -> dict:
+    """
+    Asynchronously loads chat history directly from SQLiteChatMessageHistory
+    and applies windowing logic.
+
+    This is necessary because LangChain's ConversationBufferWindowMemory
+    is not fully async-aware for its `chat_memory` attribute's `messages` property,
+    leading to `TypeError` when trying to access an awaited coroutine.
+    """
+    session_id = x["session_id"]
+    # Get the ConversationBufferWindowMemory instance, which wraps SQLiteChatMessageHistory
+    memory_buffer = get_chat_memory(session_id=session_id)
+    # Await the async messages property of the underlying SQLiteChatMessageHistory
+    all_messages = await memory_buffer.chat_memory.messages
+    # Apply windowing logic (k * 2 messages for k conversation turns)
+    k = settings.MEMORY_WINDOW_SIZE
+    windowed_messages = all_messages[-k * 2 :] if k > 0 else []
+    return {"chat_history": windowed_messages}
+
 def get_rag_chain():
     """
     Creates and returns a conversational RAG (Retrieval-Augmented Generation) chain.
@@ -74,9 +93,7 @@ def get_rag_chain():
     # This chain takes a session_id and a question as input.
     conversational_rag_chain = (
         RunnablePassthrough.assign(
-            chat_history=RunnableLambda(
-                lambda x: get_chat_memory(x["session_id"]).load_memory_variables({})
-            ) | itemgetter("chat_history")
+            chat_history=RunnableLambda(_get_async_chat_history) | itemgetter("chat_history")
         )
         | rag_chain
     )
