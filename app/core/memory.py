@@ -8,7 +8,7 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.messages import (
     BaseMessage,
-    message_from_dict,
+    _message_from_dict,
     message_to_dict,
 )
 
@@ -85,7 +85,7 @@ class SQLiteChatMessageHistory(BaseChatMessageHistory):
                 return []
 
             # Deserialize JSON strings back into LangChain message objects
-            return [message_from_dict(json.loads(row[0])) for row in rows]
+            return [_message_from_dict(json.loads(row[0])) for row in rows]
 
     async def add_message(self, message: BaseMessage) -> None:
         """
