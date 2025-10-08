@@ -14,6 +14,7 @@ mistralai==1.9.2
 
 # Vector Database & Embeddings
 chromadb==0.5.4
+langchain-chroma==0.1.2
 
 # unstructured==0.15.0 - Perspective instead of TextLoader
 
