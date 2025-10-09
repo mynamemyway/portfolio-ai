@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # Mistral AI API Key
     MISTRAL_API_KEY: str
 
+    # URL for the self-hosted embedding service API
+    EMBEDDING_SERVICE_URL: str
+
     # Number of messages to keep in the conversation window memory
     MEMORY_WINDOW_SIZE: int = 10
 
