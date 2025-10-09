@@ -84,8 +84,13 @@ class ApiServiceEmbeddings(Embeddings):
         return await self._send_request(texts)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        """Sync version is not implemented as the application is async-first."""
-        raise NotImplementedError("Use `aembed_documents` for asynchronous operation.")
+        """
+        Generates embeddings for a list of documents in a synchronous context.
+
+        This method acts as a sync-over-async bridge by running the async
+        `aembed_documents` method in a new asyncio event loop.
+        """
+        return asyncio.run(self.aembed_documents(texts))
 
     async def aembed_query(self, text: str) -> List[float]:
         """Asynchronously generates an embedding for a single query text."""
@@ -93,8 +98,11 @@ class ApiServiceEmbeddings(Embeddings):
         return embeddings[0]
 
     def embed_query(self, text: str) -> List[float]:
-        """Sync version is not implemented as the application is async-first."""
-        raise NotImplementedError("Use `aembed_query` for asynchronous operation.")
+        """
+        Generates an embedding for a single query in a synchronous context.
+        This is a sync-over-async bridge for compatibility.
+        """
+        return asyncio.run(self.aembed_query(text))
 
 
 # --- Embedding Model Initialization ---
