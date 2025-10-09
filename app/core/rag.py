@@ -52,16 +52,18 @@ class ApiServiceEmbeddings(Embeddings):
     interface, making it compatible with ChromaDB and other components.
     """
 
-    def __init__(self, api_url: str, async_client: httpx.AsyncClient):
+    def __init__(self, api_url: str, async_client: httpx.AsyncClient, loop: asyncio.AbstractEventLoop):
         """
         Initializes the embedding service client.
 
         Args:
             api_url: The full URL of the `/embed` endpoint.
             async_client: An instance of httpx.AsyncClient for making API calls.
+            loop: The running asyncio event loop.
         """
         self.api_url = api_url
         self.async_client = async_client
+        self.loop = loop
 
     async def _send_request(self, texts: List[str]) -> List[List[float]]:
         """Sends a request to the embedding API and processes the response."""
@@ -87,10 +89,13 @@ class ApiServiceEmbeddings(Embeddings):
         """
         Generates embeddings for a list of documents in a synchronous context.
 
-        This method acts as a sync-over-async bridge by running the async
-        `aembed_documents` method in a new asyncio event loop.
+        This method is a thread-safe bridge to the async version. It submits
+        the async task to the running event loop from the current thread
+        (which is likely a worker thread from ChromaDB's executor) and waits
+        for the result.
         """
-        return asyncio.run(self.aembed_documents(texts))
+        future = asyncio.run_coroutine_threadsafe(self.aembed_documents(texts), self.loop)
+        return future.result()
 
     async def aembed_query(self, text: str) -> List[float]:
         """Asynchronously generates an embedding for a single query text."""
@@ -102,18 +107,22 @@ class ApiServiceEmbeddings(Embeddings):
         Generates an embedding for a single query in a synchronous context.
         This is a sync-over-async bridge for compatibility.
         """
-        return asyncio.run(self.aembed_query(text))
+        future = asyncio.run_coroutine_threadsafe(self.aembed_query(text), self.loop)
+        return future.result()
 
 
 # --- Embedding Model Initialization ---
 
 def get_embedding_model() -> Embeddings:
     """Initializes and returns the embedding model client."""
+    # This function assumes it's called within a context where an event
+    # loop is running, which is true for our `create_vector_store` script.
+    loop = asyncio.get_running_loop()
     # Configure a transport with retry logic for transient errors (e.g., 429, 5xx)
     transport = httpx.AsyncHTTPTransport(retries=5)
     async_client = httpx.AsyncClient(transport=transport)
 
-    embeddings = ApiServiceEmbeddings(api_url=settings.EMBEDDING_SERVICE_URL, async_client=async_client)
+    embeddings = ApiServiceEmbeddings(api_url=settings.EMBEDDING_SERVICE_URL, async_client=async_client, loop=loop)
     return embeddings
 
 
