@@ -1,10 +1,16 @@
 # app/core/rag.py
 
-import time
+import os
+# Force disable ChromaDB telemetry before any Chroma imports
+# This is a robust way to prevent telemetry errors.
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
+import asyncio
 import sys
 import logging
 import httpx
 from typing import List, Any
+import time
 
 from langchain_community.document_loaders import TextLoader # Keep for now, will be replaced later
 from langchain_core.embeddings import Embeddings
@@ -121,7 +127,7 @@ def get_vector_store() -> Chroma:
 
 # --- Main Indexing Function ---
 
-def create_vector_store():
+async def create_vector_store():
     """
     Orchestrates the entire process of creating the vector store:
     1. Loads and splits documents from the knowledge base.
@@ -154,14 +160,14 @@ def create_vector_store():
         batch_num = (i // EMBEDDING_BATCH_SIZE) + 1
         logging.info(f"Processing batch {batch_num}/{num_batches}...")
 
-        vector_store.add_documents(documents=batch)
+        await vector_store.aadd_documents(documents=batch)
 
         # Add a delay between batches to avoid rate limiting, but not after the last batch
         if i + EMBEDDING_BATCH_SIZE < total_chunks:
             logging.info(
                 f"Waiting for {EMBEDDING_BATCH_DELAY} second(s) before next batch..."
             )
-            time.sleep(EMBEDDING_BATCH_DELAY)
+            await asyncio.sleep(EMBEDDING_BATCH_DELAY)
 
     logging.info("Vector store created and documents indexed successfully.")
 
@@ -220,4 +226,4 @@ if __name__ == "__main__":
         level=logging.INFO,
         stream=sys.stdout,
     )
-    create_vector_store()
+    asyncio.run(create_vector_store())
