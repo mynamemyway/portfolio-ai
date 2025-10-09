@@ -1,17 +1,22 @@
 # app/core/rag.py
 
-import time
+import os
+# Force disable ChromaDB telemetry before any Chroma imports
+# This is a robust way to prevent telemetry errors.
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
+import asyncio
 import sys
 import logging
 import httpx
-from typing import List
+from typing import List, Any
+import time
 
 from langchain_community.document_loaders import TextLoader # Keep for now, will be replaced later
-from langchain_chroma import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_core.embeddings import Embeddings
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_mistralai.embeddings import MistralAIEmbeddings
+from langchain_chroma import Chroma
 
 from app.config import settings
 
@@ -31,48 +36,93 @@ KNOWLEDGE_BASE_DIR = Path(__file__).parent.parent / "knowledge_base"
 # Directory where the local ChromaDB vector store will be persisted.
 CHROMA_PERSIST_DIR = ROOT_DIR / "chroma_db"
 
-# --- Model Names ---
-
-# Primary embedding model for production (API-based).
-MISTRAL_EMBEDDING_MODEL = "mistral-embed"
-
-# Alternative embedding model for local development (requires heavy dependencies).
-HF_EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
-
 # --- Batching Constants for Indexing ---
 EMBEDDING_BATCH_SIZE = 16  # Number of documents to process in one batch
 EMBEDDING_BATCH_DELAY = 1  # Delay in seconds between batches
 
 
+# --- Custom Embedding Client ---
+
+class ApiServiceEmbeddings(Embeddings):
+    """
+    Custom LangChain embedding class that connects to a self-hosted embedding service.
+
+    This class handles the communication with the FastAPI service, sending text
+    and receiving vector embeddings. It implements the LangChain `Embeddings`
+    interface, making it compatible with ChromaDB and other components.
+    """
+
+    def __init__(self, api_url: str, async_client: httpx.AsyncClient, loop: asyncio.AbstractEventLoop):
+        """
+        Initializes the embedding service client.
+
+        Args:
+            api_url: The full URL of the `/embed` endpoint.
+            async_client: An instance of httpx.AsyncClient for making API calls.
+            loop: The running asyncio event loop.
+        """
+        self.api_url = api_url
+        self.async_client = async_client
+        self.loop = loop
+
+    async def _send_request(self, texts: List[str]) -> List[List[float]]:
+        """Sends a request to the embedding API and processes the response."""
+        try:
+            response = await self.async_client.post(
+                self.api_url, json={"texts": texts}, timeout=60.0
+            )
+            response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+            data = response.json()
+            return data["embeddings"]
+        except httpx.HTTPStatusError as e:
+            logging.error(f"HTTP error occurred: {e.response.status_code} - {e.response.text}")
+            raise
+        except Exception as e:
+            logging.error(f"An error occurred while calling the embedding API: {e}")
+            raise
+
+    async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
+        """Asynchronously generates embeddings for a list of documents."""
+        return await self._send_request(texts)
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """
+        Generates embeddings for a list of documents in a synchronous context.
+
+        This method is a thread-safe bridge to the async version. It submits
+        the async task to the running event loop from the current thread
+        (which is likely a worker thread from ChromaDB's executor) and waits
+        for the result.
+        """
+        future = asyncio.run_coroutine_threadsafe(self.aembed_documents(texts), self.loop)
+        return future.result()
+
+    async def aembed_query(self, text: str) -> List[float]:
+        """Asynchronously generates an embedding for a single query text."""
+        embeddings = await self._send_request([text])
+        return embeddings[0]
+
+    def embed_query(self, text: str) -> List[float]:
+        """
+        Generates an embedding for a single query in a synchronous context.
+        This is a sync-over-async bridge for compatibility.
+        """
+        future = asyncio.run_coroutine_threadsafe(self.aembed_query(text), self.loop)
+        return future.result()
+
+
 # --- Embedding Model Initialization ---
 
-def get_embedding_model():
-    """
-    Initializes and returns the embedding model based on the chosen strategy.
-
-    Primary (Production): MistralAIEmbeddings via API. This is lightweight and
-    suitable for serverless environments like Render.
-
-    Alternative (Local): HuggingFaceEmbeddings. Requires installing
-    sentence-transformers and its heavy dependencies (e.g., torch).
-    """
+def get_embedding_model() -> Embeddings:
+    """Initializes and returns the embedding model client."""
+    # This function assumes it's called within a context where an event
+    # loop is running, which is true for our `create_vector_store` script.
+    loop = asyncio.get_running_loop()
     # Configure a transport with retry logic for transient errors (e.g., 429, 5xx)
     transport = httpx.AsyncHTTPTransport(retries=5)
     async_client = httpx.AsyncClient(transport=transport)
 
-    # Primary option for production using Mistral's API
-    embeddings = MistralAIEmbeddings(
-        model=MISTRAL_EMBEDDING_MODEL,
-        mistral_api_key=settings.MISTRAL_API_KEY,
-        async_client=async_client,
-    )
-
-    # --- Alternative for local development (commented out) ---
-    # embeddings = HuggingFaceEmbeddings(
-    #     model_name=HF_EMBEDDING_MODEL_NAME,
-    #     model_kwargs={"device": "cpu"},  # Explicitly use CPU
-    # )
-
+    embeddings = ApiServiceEmbeddings(api_url=settings.EMBEDDING_SERVICE_URL, async_client=async_client, loop=loop)
     return embeddings
 
 
@@ -94,7 +144,7 @@ def get_vector_store() -> Chroma:
 
 # --- Main Indexing Function ---
 
-def create_vector_store():
+async def create_vector_store():
     """
     Orchestrates the entire process of creating the vector store:
     1. Loads and splits documents from the knowledge base.
@@ -127,14 +177,14 @@ def create_vector_store():
         batch_num = (i // EMBEDDING_BATCH_SIZE) + 1
         logging.info(f"Processing batch {batch_num}/{num_batches}...")
 
-        vector_store.add_documents(documents=batch)
+        await vector_store.aadd_documents(documents=batch)
 
         # Add a delay between batches to avoid rate limiting, but not after the last batch
         if i + EMBEDDING_BATCH_SIZE < total_chunks:
             logging.info(
                 f"Waiting for {EMBEDDING_BATCH_DELAY} second(s) before next batch..."
             )
-            time.sleep(EMBEDDING_BATCH_DELAY)
+            await asyncio.sleep(EMBEDDING_BATCH_DELAY)
 
     logging.info("Vector store created and documents indexed successfully.")
 
@@ -193,4 +243,4 @@ if __name__ == "__main__":
         level=logging.INFO,
         stream=sys.stdout,
     )
-    create_vector_store()
+    asyncio.run(create_vector_store())
