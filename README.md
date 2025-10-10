@@ -20,7 +20,7 @@
   <img src="https://img.shields.io/badge/Python-3.12+-blue.svg" alt="Python version">
   <img src="https://img.shields.io/badge/aiogram-3.x-0088cc.svg" alt="aiogram">
   <img src="https://img.shields.io/badge/LangChain-Orchestrator-blueviolet.svg" alt="LangChain">
-  <img src="https://img.shields.io/badge/Mistral_AI-LLM-teal.svg" alt="Mistral AI">
+  <img src="https://img.shields.io/badge/OpenRouter-LLM_Gateway-purple.svg" alt="OpenRouter">
   <img src="https://img.shields.io/badge/Self_Hosted-Embedding_Service-9cf.svg" alt="Self-Hosted Embedding Service">
   <img src="https://img.shields.io/badge/ChromaDB-Vector_Store-9f4ae6.svg" alt="ChromaDB">
   <img src="https://img.shields.io/badge/SQLite-Database-orange.svg" alt="SQLite">
@@ -70,16 +70,22 @@ Portfolio-AI/
     ```
     Откройте файл `.env` и добавьте в него следующие переменные, заменив значения на ваши:
     ```dotenv
-    # Токен вашего Telegram-бота от @BotFather
-    BOT_TOKEN="your_telegram_bot_token"
+    # Telegram Bot Token from @BotFather
+    BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
 
-    # Ваш API-ключ от Mistral AI
-    MISTRAL_API_KEY="your_mistral_api_key"
+    # OpenRouter API Key from https://openrouter.ai/keys
+    OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY"
 
-    # URL вашего сервиса для генерации эмбеддингов
+    # URL for the self-hosted embedding service API
     EMBEDDING_SERVICE_URL="http://your_server_ip:8000/embed"
 
-    # (Опционально) Количество последних сообщений в окне памяти
+    # (Optional) Controls the creativity of the response (e.g., 0.7).
+    OPENROUTER_TEMPERATURE=0.7
+
+    # (Optional) Limits the length of the generated response in tokens (e.g., 1024).
+    OPENROUTER_MAX_TOKENS=1024
+
+    # (Optional) The number of recent messages to keep in the conversation memory window.
     MEMORY_WINDOW_SIZE=10
     ```
 
@@ -130,4 +136,3 @@ Portfolio-AI/
 - [x] Проведено локальное тестирование всей системы.
 - [x] Проведена интеграция и отладка собственного embedding-сервиса.
 - [ ] Подготовить проект к деплою на Render.com или собственном сервере.
-

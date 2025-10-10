@@ -11,17 +11,30 @@ class Settings(BaseSettings):
     # Telegram Bot Token from @BotFather
     BOT_TOKEN: str
 
-    # Mistral AI API Key
-    MISTRAL_API_KEY: str
+    # OpenRouter API Key
+    OPENROUTER_API_KEY: str
 
     # URL for the self-hosted embedding service API
     EMBEDDING_SERVICE_URL: str
+    
+    # The specific chat model to use from OpenRouter
+    # Best="google/gemini-2.0-flash-exp:free"
+    OPENROUTER_CHAT_MODEL: str = "mistralai/mistral-medium-3.1"
+    
+    # The fallback model to use if the primary model fails
+    OPENROUTER_FALLBACK_MODEL: str = "mistralai/mistral-small"
+    
+    # The base URL for the OpenRouter API
+    OPENROUTER_API_BASE: str = "https://openrouter.ai/api/v1"
 
+    # Controls the creativity of the response (0.0 - 1.0)
+    OPENROUTER_TEMPERATURE: float = 0.7
+
+    # Limits the length of the generated response in tokens
+    OPENROUTER_MAX_TOKENS: int = 1024
+    
     # Number of messages to keep in the conversation window memory
     MEMORY_WINDOW_SIZE: int = 10
-
-    # The specific chat model to use from Mistral AI
-    MISTRAL_CHAT_MODEL: str = "mistral-small-latest"
 
     # Pydantic model configuration
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

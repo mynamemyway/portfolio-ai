@@ -9,7 +9,7 @@ pydantic==2.10.3
 # LLM Orchestration & Integration
 langchain==0.2.11
 langchain-community==0.2.10
-mistralai==1.9.2
+langchain-openai==0.1.19
 
 # Vector Database & Embeddings
 chromadb==0.5.4

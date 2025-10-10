@@ -1,15 +1,41 @@
 # app/core/chain.py
 
+import logging
 from operator import itemgetter
+from typing import Any
+from uuid import UUID
 
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
-from langchain_mistralai.chat_models import ChatMistralAI
+from langchain_openai import ChatOpenAI
 
 from app.config import settings
 from app.core.memory import get_chat_memory
 from app.core.rag import get_vector_store
+
+# --- Fallback Logging ---
+
+
+class FallbackLoggingCallbackHandler(BaseCallbackHandler):
+    """A custom callback handler to log when the primary LLM fails and a fallback is used."""
+
+    def on_llm_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Logs the primary LLM error and the subsequent switch to a fallback model."""
+        # Log the specific error from the primary LLM at the WARNING level.
+        logging.warning(
+            f"Primary LLM failed. Run ID: {run_id}. Error: {error}"
+        )
+        # Log the corrective action (switching to fallback) at the INFO level.
+        logging.info(f"Switching to fallback model for Run ID: {run_id}")
 
 # --- System Prompt ---
 
@@ -64,7 +90,27 @@ def get_rag_chain():
         A Runnable object representing the complete conversational RAG chain.
     """
     # 1. Initialize components
-    llm = ChatMistralAI(mistral_api_key=settings.MISTRAL_API_KEY)
+    # Initialize the primary LLM using the main model from settings
+    primary_llm = ChatOpenAI(
+        model=settings.OPENROUTER_CHAT_MODEL,
+        openai_api_key=settings.OPENROUTER_API_KEY,
+        base_url=settings.OPENROUTER_API_BASE,
+        temperature=settings.OPENROUTER_TEMPERATURE,  # Controls the creativity of the response
+        max_tokens=settings.OPENROUTER_MAX_TOKENS,  # Limits the length of the generated response
+    )
+
+    # Initialize the fallback LLM using the backup model from settings
+    fallback_llm = ChatOpenAI(
+        model=settings.OPENROUTER_FALLBACK_MODEL,
+        openai_api_key=settings.OPENROUTER_API_KEY,
+        base_url=settings.OPENROUTER_API_BASE,
+        temperature=settings.OPENROUTER_TEMPERATURE,
+        max_tokens=settings.OPENROUTER_MAX_TOKENS,
+    )
+
+    # Create a resilient LLM component with a fallback mechanism
+    llm = primary_llm.with_fallbacks([fallback_llm])
+
     retriever = get_vector_store().as_retriever()
 
     # 2. Define the prompt template
