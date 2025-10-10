@@ -79,7 +79,12 @@ async def handle_message(message: Message, bot: Bot):
         # Log the full error for debugging purposes
         logging.error(f"Error processing message for user {session_id}: {e}", exc_info=True)
         # Inform the user that an error occurred
-        await message.answer("К сожалению, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.")
+        await message.answer(
+            "```python\n"
+            "К сожалению, произошла ошибка при обработке вашего запроса\\."
+            "Пожалуйста, попробуйте еще раз позже\\."
+            "```"
+        )
 
 
 async def main() -> None:
