@@ -1,8 +1,3 @@
-1. Убрать ошибки внутренней системы телеметрии ChromaDB - устренено настройкой фильтров логирования
- ERROR:chromadb.telemetry.product.posthog:Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
-
- ERROR:chromadb.telemetry.product.posthog:Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
-
 2. Как улучшить обновление базы знаний без необходимости удаления? Реализовать проверку дубликатов?
 
  Как это можно сделать:
@@ -17,8 +12,6 @@
 
 3. Отредактироварь:
  app/knowledge_base/prime_networking_my_portfolio_project_README.md
-
-4. Выпустить релиз - обновить репу - сделано
 
 5. Развернуть бота на рендер или своём сервере
 
