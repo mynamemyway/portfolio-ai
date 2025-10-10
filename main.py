@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import re
 import sys
 
 from aiogram import Bot, Dispatcher, F, Router
@@ -26,16 +25,6 @@ class TelemetryFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         # Suppress logs from ChromaDB's telemetry module
         return not record.name.startswith("chromadb.telemetry.product.posthog")
-
-
-def escape_markdown_v2(text: str) -> str:
-    """
-    Escapes special characters for Telegram's MarkdownV2 parse mode.
-    """
-    # Characters to escape: _ * [ ] ( ) ~ ` > # + - = | { } . !
-    # Note: The backslash must be escaped in the regex pattern itself.
-    escape_chars = r'([_*\\~`>#+\-=|{}.!])'
-    return re.sub(escape_chars, r'\\\1', text)
 
 
 @router.message(CommandStart())
@@ -78,8 +67,10 @@ async def handle_message(message: Message, bot: Bot):
         )
 
         # 4. Send the generated response back to the user
-        # Escape the AI response to prevent MarkdownV2 parsing errors
-        await message.answer(escape_markdown_v2(ai_response))
+        # Sanitize the response to prevent breaking the code block and wrap it.
+        safe_response = ai_response.replace("```", "`` ` ``")
+        formatted_response = f"```\n{safe_response}\n```"
+        await message.answer(formatted_response)
 
         # 5. Manually save the context to the chat history
         # The RAG chain loads history, but saving is handled here.
