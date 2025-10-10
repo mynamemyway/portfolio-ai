@@ -22,7 +22,7 @@
 *   **Логика:**
     1.  Удалить строки `langchain-mistralai` и `mistralai`.
     2.  Добавить строку `langchain-openai`.
-    3.  Выполнить `pip install -r requirements.txt` для применения изменений.
+    3.  Итоговая строка: `langchain-openai==0.1.19`.
 
 #### **1.2. Обновление `.env.example`**
 *   **Цель:** Отразить в примере файла окружения новые переменные, необходимые для OpenRouter.
@@ -31,6 +31,7 @@
     1.  Заменить `MISTRAL_API_KEY` на `OPENROUTER_API_KEY`.
     2.  Добавить комментарии, поясняющие назначение нового ключа.
     3.  Убедиться, что переменная `EMBEDDING_SERVICE_URL` осталась без изменений.
+    4.  Добавить опциональные переменные `OPENROUTER_TEMPERATURE` и `OPENROUTER_MAX_TOKENS`.
 
 #### **1.3. Обновление `app/config.py`**
 *   **Цель:** Адаптировать Pydantic-модель `Settings` для работы с новыми переменными окружения.
@@ -40,9 +41,10 @@
     1.  Заменить поле `MISTRAL_API_KEY: str` на `OPENROUTER_API_KEY: str`.
     2.  Удалить поле `MISTRAL_CHAT_MODEL`.
     3.  Добавить новые поля с значениями по умолчанию для моделей и базового URL:
-        *   `OPENROUTER_CHAT_MODEL: str = "mistralai/mistral-7b-instruct-v0.3"`
+        *   `OPENROUTER_CHAT_MODEL: str = "google/gemini-2.0-flash-exp:free"`
         *   `OPENROUTER_API_BASE: str = "https://openrouter.ai/api/v1"`
     4.  Убедиться, что поле `EMBEDDING_SERVICE_URL: str` осталось без изменений.
+    5.  Добавить новые поля для управления генерацией: `OPENROUTER_TEMPERATURE: float = 0.7` и `OPENROUTER_MAX_TOKENS: int = 1024`.
 
 ---
 
@@ -66,8 +68,8 @@
                 model=settings.OPENROUTER_CHAT_MODEL,
                 openai_api_key=settings.OPENROUTER_API_KEY,
                 base_url=settings.OPENROUTER_API_BASE,
-                temperature=0.7, # Опционально: можно настроить креативность
-                max_tokens=1024, # Опционально: можно ограничить длину ответа
+                temperature=settings.OPENROUTER_TEMPERATURE,
+                max_tokens=settings.OPENROUTER_MAX_TOKENS,
             )
             ```
 
@@ -83,6 +85,7 @@
 *   **Логика:**
     1.  В разделе "Стек технологий" заменить шильдик `Mistral AI` на `OpenRouter`.
     2.  В разделе "Инструкции по запуску" обновить шаг 3 (Настройка переменных окружения), заменив `MISTRAL_API_KEY` на `OPENROUTER_API_KEY` и обновив описание.
+    3.  Добавить в пример `.env` новые опциональные переменные `OPENROUTER_TEMPERATURE` и `OPENROUTER_MAX_TOKENS`.
 
 ---
 
@@ -91,10 +94,11 @@
 *   **Цель:** Убедиться, что после рефакторинга система работает корректно.
 *   **Инструкции:**
     1.  Обновить файл `.env`, заменив `MISTRAL_API_KEY` на `OPENROUTER_API_KEY`.
-    2.  Выполнить `pip install -r requirements.txt` для установки `langchain-openai` и удаления `langchain-mistralai`.
+    2.  Выполнить `pip install -r requirements.txt` для установки `langchain-openai==0.1.19` и удаления `langchain-mistralai`.
     3.  Запустить бота командой `python main.py`.
     4.  Проверить работоспособность, задав несколько вопросов боту.
     5.  **Важно:** Переиндексация базы знаний (`python -m app.core.rag`) не требуется, так как модель эмбеддингов не изменялась.
+    6.  **Примечание:** В ходе тестирования была выявлена гео-блокировка модели `meta-llama/llama-3.3-8b-instruct:free` и неверный ID для `google/gemini-flash-2.0:free`. Финальная рабочая модель: `google/gemini-2.0-flash-exp:free`.
         *   `model=settings.OPENROUTER_CHAT_MODEL`
         *   `openai_api_key=settings.OPENROUTER_API_KEY`
         *   `base_url=settings.OPENROUTER_API_BASE`
