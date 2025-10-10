@@ -5,7 +5,7 @@ from operator import itemgetter
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
-from langchain_mistralai.chat_models import ChatMistralAI
+from langchain_openai import ChatOpenAI
 
 from app.config import settings
 from app.core.memory import get_chat_memory
@@ -64,7 +64,15 @@ def get_rag_chain():
         A Runnable object representing the complete conversational RAG chain.
     """
     # 1. Initialize components
-    llm = ChatMistralAI(mistral_api_key=settings.MISTRAL_API_KEY)
+    # Initialize the LLM using ChatOpenAI, configured for OpenRouter
+    llm = ChatOpenAI(
+        model=settings.OPENROUTER_CHAT_MODEL,
+        openai_api_key=settings.OPENROUTER_API_KEY,
+        base_url=settings.OPENROUTER_API_BASE,
+        temperature=0.7,  # Controls the creativity of the response
+        max_tokens=1024,  # Limits the length of the generated response
+    )
+
     retriever = get_vector_store().as_retriever()
 
     # 2. Define the prompt template
