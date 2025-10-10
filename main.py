@@ -5,6 +5,7 @@ import logging
 import sys
 
 from aiogram import Bot, Dispatcher, F, Router
+from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from langchain_core.messages import AIMessage, HumanMessage
@@ -33,12 +34,14 @@ async def handle_start(message: Message):
     Sends a welcome message to the user explaining the bot's purpose.
     """
     welcome_message = (
+        "```python\n"
         "Инициализация...\n\n"
-        "Протокол Portfolio AI v0.3.0 активирован.\n"
-        "Я — цифровая копия Python-разработчика Александр.\n"  
+        "Протокол Portfolio AI v0\\.3\\.0 активирован\\.\n"
+        "Я — цифровая копия Python-разработчика Александр\\.\n"
         "Мои базы данных содержат полные стеки, архитектурные решения "
-        "и детали реализации проекта PrimeNetworking.\n\n"  
-        "Задайте вопрос, чтобы начать знакомство."
+        "и детали реализации проекта PrimeNetworking\\.\n\n"
+        "Задайте вопрос, чтобы начать знакомство\\.\n"
+        "```"
     )
     await message.answer(welcome_message)
 
@@ -95,7 +98,10 @@ async def main() -> None:
         handler.addFilter(telemetry_filter)
 
     # Initialize Bot and Dispatcher instances. The bot token is read from the settings.
-    bot = Bot(token=settings.BOT_TOKEN)
+    bot = Bot(
+        token=settings.BOT_TOKEN,
+        default=DefaultBotProperties(parse_mode="MarkdownV2"),
+    )
     dp = Dispatcher()
 
     # Include the router in the dispatcher. This registers all handlers from the router.
