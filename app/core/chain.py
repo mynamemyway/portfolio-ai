@@ -69,8 +69,8 @@ def get_rag_chain():
         model=settings.OPENROUTER_CHAT_MODEL,
         openai_api_key=settings.OPENROUTER_API_KEY,
         base_url=settings.OPENROUTER_API_BASE,
-        temperature=0.7,  # Controls the creativity of the response
-        max_tokens=1024,  # Limits the length of the generated response
+        temperature=settings.OPENROUTER_TEMPERATURE,  # Controls the creativity of the response
+        max_tokens=settings.OPENROUTER_MAX_TOKENS,  # Limits the length of the generated response
     )
 
     retriever = get_vector_store().as_retriever()
