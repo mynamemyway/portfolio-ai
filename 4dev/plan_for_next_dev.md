@@ -1,4 +1,4 @@
-1. Убрать ошибки внутренней системы телеметрии ChromaDB
+1. Убрать ошибки внутренней системы телеметрии ChromaDB - устренено настройкой фильтров логирования
  ERROR:chromadb.telemetry.product.posthog:Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
 
  ERROR:chromadb.telemetry.product.posthog:Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
@@ -18,9 +18,9 @@
 3. Отредактироварь:
  app/knowledge_base/prime_networking_my_portfolio_project_README.md
 
-4. Собрать все планы по реализации в один подробный документ
+4. Собрать все планы по реализации в один подробный документ - сделано
 
-5. Выпустить релиз - обновить репу
+5. Выпустить релиз - обновить репу - сделано
 
 6. Развернуть бота на рендер или своём сервере
 
