@@ -1,7 +1,10 @@
 # app/core/chain.py
 
+import logging
 from operator import itemgetter
+from typing import Any, UUID
 
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
@@ -10,6 +13,25 @@ from langchain_openai import ChatOpenAI
 from app.config import settings
 from app.core.memory import get_chat_memory
 from app.core.rag import get_vector_store
+
+# --- Fallback Logging ---
+
+
+class FallbackLoggingCallbackHandler(BaseCallbackHandler):
+    """A custom callback handler to log when the primary LLM fails and a fallback is used."""
+
+    def on_llm_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Logs a warning when an LLM error occurs, indicating a fallback."""
+        logging.warning(
+            f"Primary LLM failed with error: {error}. Switching to fallback model. Run ID: {run_id}"
+        )
 
 # --- System Prompt ---
 
