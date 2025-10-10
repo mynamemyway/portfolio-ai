@@ -57,26 +57,36 @@ def sanitize_for_telegram_markdown(text: str) -> str:
     if not text:
         return ""
 
-    # Step 1: Convert Markdown headers (e.g., ### Title) to bold text (*Title*).
-    # This regex is non-greedy and avoids consuming subsequent newlines.
-    sanitized_text = re.sub(r'^\s*#+\s+(.+?)\s*$', r'*\1*', text, flags=re.MULTILINE)
+    processed_lines = []
+    for line in text.split('\n'):
+        # Preserve empty lines
+        if not line.strip():
+            processed_lines.append(line)
+            continue
 
-    # Step 2: Convert multi-level list items from '-' to '•', preserving indentation.
-    # It captures the leading whitespace (group 1) and re-inserts it.
-    sanitized_text = re.sub(r'^(\s*)-\s+', r'\1• ', sanitized_text, flags=re.MULTILINE)
+        # Make a copy to modify
+        processed_line = line
 
-    # Step 3: Escape all other special characters required by MarkdownV2.
-    # We exclude characters that are part of valid formatting we want to preserve
-    # ('*', '_', '`') or that we've already handled ('#', '-').
-    # The characters to escape are: . ! + = | { } ( ) [ ] > ~
-    # The regex uses a negative lookbehind `(?<!...)` to avoid escaping a character
-    # that is already escaped.
-    escape_chars = r"(?<!\\)([.!+=|{}()\[\]>~])"
+        # Rule 1: Convert main headers (e.g., ### Title) to bold text.
+        processed_line = re.sub(r'^\s*#+\s+(.+)', r'*\1*', processed_line)
+
+        # Rule 2: Convert list headers (e.g., "- **Tools:**") to just bold text.
+        processed_line = re.sub(r'^\s*-\s+(\*\*.*?\*\*)', r'\1', processed_line)
+
+        # Rule 3: Convert indented list items (e.g., "  - Ruff") to use a bullet point.
+        processed_line = re.sub(r'^(\s+)-\s+', r'\1• ', processed_line)
+
+        # Rule 4: Convert any remaining top-level list items.
+        processed_line = re.sub(r'^\s*-\s+', '• ', processed_line)
+
+        processed_lines.append(processed_line)
+
+    # Join the lines back and perform a final escape of all special characters.
+    sanitized_text = '\n'.join(processed_lines)
+
+    # Final escape for all special characters not part of intended formatting.
+    escape_chars = r"(?<!\\)([\[\]\(\)~`>+\-=|{}.!])"
     sanitized_text = re.sub(escape_chars, r'\\\1', sanitized_text)
-
-    # Step 4: Specifically escape hyphens that are NOT part of our new list items.
-    # This handles cases like "word - word".
-    sanitized_text = re.sub(r'(?<!•\s)-', r'\-', sanitized_text)
 
     return sanitized_text
 
