@@ -2,7 +2,8 @@
 
 import logging
 from operator import itemgetter
-from typing import Any, UUID
+from typing import Any
+from uuid import UUID
 
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.output_parsers import StrOutputParser
@@ -28,10 +29,13 @@ class FallbackLoggingCallbackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> None:
-        """Logs a warning when an LLM error occurs, indicating a fallback."""
+        """Logs the primary LLM error and the subsequent switch to a fallback model."""
+        # Log the specific error from the primary LLM at the WARNING level.
         logging.warning(
-            f"Primary LLM failed with error: {error}. Switching to fallback model. Run ID: {run_id}"
+            f"Primary LLM failed. Run ID: {run_id}. Error: {error}"
         )
+        # Log the corrective action (switching to fallback) at the INFO level.
+        logging.info(f"Switching to fallback model for Run ID: {run_id}")
 
 # --- System Prompt ---
 
