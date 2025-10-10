@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     EMBEDDING_SERVICE_URL: str
     
     # The specific chat model to use from OpenRouter
-    OPENROUTER_CHAT_MODEL: str = "meta-llama/llama-3.3-8b-instruct:free"
+    OPENROUTER_CHAT_MODEL: str = "google/gemini-2.0-flash-exp:free"
     
     # The base URL for the OpenRouter API
     OPENROUTER_API_BASE: str = "https://openrouter.ai/api/v1"
