@@ -2,11 +2,11 @@
 
 ## Введение
 Этот план описывает последовательность действий для рефакторинга проекта с целью перехода от прямого использования API Mistral AI к использованию агрегатора OpenRouter.
-
 **Цель:**
 1.  Устранить проблему с жесткими лимитами бесплатного API Mistral.
 2.  Получить доступ к широкому спектру бесплатных и более производительных моделей.
 3.  Унифицировать взаимодействие с LLM через OpenAI-совместимый интерфейс.
+4.  **Сохранить существующую, кастомную модель для создания эмбеддингов без изменений.**
 
 Разработка будет вестись послойно, затрагивая конфигурацию, слой данных (embeddings) и сервисный слой (LLM).
 
@@ -30,6 +30,7 @@
 *   **Логика:**
     1.  Заменить `MISTRAL_API_KEY` на `OPENROUTER_API_KEY`.
     2.  Добавить комментарии, поясняющие назначение нового ключа.
+    3.  Убедиться, что переменная `EMBEDDING_SERVICE_URL` осталась без изменений.
 
 #### **1.3. Обновление `app/config.py`**
 *   **Цель:** Адаптировать Pydantic-модель `Settings` для работы с новыми переменными окружения.
@@ -39,47 +40,61 @@
     1.  Заменить поле `MISTRAL_API_KEY: str` на `OPENROUTER_API_KEY: str`.
     2.  Удалить поле `MISTRAL_CHAT_MODEL`.
     3.  Добавить новые поля с значениями по умолчанию для моделей и базового URL:
-        *   `OPENROUTER_CHAT_MODEL: str = "google/gemini-flash-1.5"`
-        *   `OPENROUTER_EMBEDDING_MODEL: str = "mixedbread-ai/mxbai-embed-large-v1"`
+        *   `OPENROUTER_CHAT_MODEL: str = "mistralai/mistral-7b-instruct-v0.3"`
         *   `OPENROUTER_API_BASE: str = "https://openrouter.ai/api/v1"`
+    4.  Убедиться, что поле `EMBEDDING_SERVICE_URL: str` осталось без изменений.
 
 ---
 
-### **Этап 2: Рефакторинг Слоя Данных (Embedding Model)**
+### **Этап 2: Рефакторинг Сервисного Слоя (LLM)**
 
-На этом этапе мы заменим модель для создания векторов (эмбеддингов).
-
-#### **2.1. Обновление `app/core/rag.py`**
-*   **Цель:** Заменить `MistralAIEmbeddings` на `OpenAIEmbeddings`, настроенный для OpenRouter.
-*   **Файл:** `app/core/rag.py`
-*   **Функция / Сигнатура:** `get_embedding_model()`
-*   **Логика:**
-    1.  Удалить импорт `MistralAIEmbeddings`.
-    2.  Импортировать `OpenAIEmbeddings` из `langchain_openai`.
-    3.  Внутри функции `get_embedding_model` удалить инициализацию `httpx.AsyncClient`.
-    4.  Инициализировать и вернуть `OpenAIEmbeddings`, передав в конструктор:
-        *   `model=settings.OPENROUTER_EMBEDDING_MODEL`
-        *   `openai_api_key=settings.OPENROUTER_API_KEY`
-        *   `base_url=settings.OPENROUTER_API_BASE`
-        *   `http_client`: `langchain-openai` управляет им самостоятельно, поэтому ручная настройка `httpx` больше не нужна.
-
----
-
-### **Этап 3: Рефакторинг Сервисного Слоя (LLM)**
-
-На этом этапе мы заменим основную чат-модель.
-
-#### **3.1. Обновление `app/core/chain.py`**
+#### **2.1. Обновление `app/core/chain.py`**
 *   **Цель:** Заменить `ChatMistralAI` на `ChatOpenAI`, настроенный для OpenRouter.
 *   **Файл:** `app/core/chain.py`
 *   **Функция / Сигнатура:** `get_rag_chain()`
 *   **Логика:**
     1.  Удалить импорт `ChatMistralAI`.
     2.  Импортировать `ChatOpenAI` из `langchain_openai`.
-    3.  Внутри функции `get_rag_chain` заменить инициализацию `llm`:
-        *   Было: `llm = ChatMistralAI(...)`
-        *   Стало: `llm = ChatOpenAI(...)`
-    4.  Передать в конструктор `ChatOpenAI` следующие параметры:
+    3.  Внутри функции `get_rag_chain` заменить инициализацию `llm`.
+        *   **Было:**
+            ```python
+            llm = ChatMistralAI(mistral_api_key=settings.MISTRAL_API_KEY)
+            ```
+        *   **Стало:**
+            ```python
+            llm = ChatOpenAI(
+                model=settings.OPENROUTER_CHAT_MODEL,
+                openai_api_key=settings.OPENROUTER_API_KEY,
+                base_url=settings.OPENROUTER_API_BASE,
+                temperature=0.7, # Опционально: можно настроить креативность
+                max_tokens=1024, # Опционально: можно ограничить длину ответа
+            )
+            ```
+
+---
+
+### **Этап 3: Обновление Документации**
+
+На этом этапе мы актуализируем `README.md`, чтобы он отражал изменения в стеке и инструкциях по настройке.
+
+#### **3.1. Обновление `README.md`**
+*   **Цель:** Привести документацию в соответствие с новым стеком технологий.
+*   **Файл:** `README.md`
+*   **Логика:**
+    1.  В разделе "Стек технологий" заменить шильдик `Mistral AI` на `OpenRouter`.
+    2.  В разделе "Инструкции по запуску" обновить шаг 3 (Настройка переменных окружения), заменив `MISTRAL_API_KEY` на `OPENROUTER_API_KEY` и обновив описание.
+
+---
+
+### **Этап 4: Тестирование**
+
+*   **Цель:** Убедиться, что после рефакторинга система работает корректно.
+*   **Инструкции:**
+    1.  Обновить файл `.env`, заменив `MISTRAL_API_KEY` на `OPENROUTER_API_KEY`.
+    2.  Выполнить `pip install -r requirements.txt` для установки `langchain-openai` и удаления `langchain-mistralai`.
+    3.  Запустить бота командой `python main.py`.
+    4.  Проверить работоспособность, задав несколько вопросов боту.
+    5.  **Важно:** Переиндексация базы знаний (`python -m app.core.rag`) не требуется, так как модель эмбеддингов не изменялась.
         *   `model=settings.OPENROUTER_CHAT_MODEL`
         *   `openai_api_key=settings.OPENROUTER_API_KEY`
         *   `base_url=settings.OPENROUTER_API_BASE`
