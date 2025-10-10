@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     MEMORY_WINDOW_SIZE: int = 10
     
     # The specific chat model to use from OpenRouter
-    OPENROUTER_CHAT_MODEL: str = "mistralai/mistral-7b-instruct-v0.3"
+    OPENROUTER_CHAT_MODEL: str = "meta-llama/llama-3.3-8b-instruct:free"
     
     # The base URL for the OpenRouter API
     OPENROUTER_API_BASE: str = "https://openrouter.ai/api/v1"
