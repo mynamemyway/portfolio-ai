@@ -36,7 +36,7 @@ async def handle_start(message: Message):
     welcome_message = (
         "```python\n"
         "Инициализация...\n\n"
-        "Протокол Portfolio AI v0.3.0 активирован\\.\n"
+        "Протокол Portfolio AI v0.4.0 активирован\\.\n"
         "Я — цифровая копия Python разработчика Александра\\.\n"
         "Мои базы данных содержат полные стеки, архитектурные решения "
         "и детали реализации проекта PrimeNetworking\\.\n\n"
