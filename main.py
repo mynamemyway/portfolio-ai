@@ -11,7 +11,7 @@ from aiogram.types import Message
 from langchain_core.messages import AIMessage, HumanMessage
 
 from app.config import settings
-from app.core.chain import get_rag_chain
+from app.core.chain import FallbackLoggingCallbackHandler, get_rag_chain
 from app.core.memory import get_chat_memory
 
 # Create a new Router instance. Routers are used to structure handlers.
@@ -61,9 +61,13 @@ async def handle_message(message: Message, bot: Bot):
 
     # 3. Get the RAG chain and invoke it with the user's question
     rag_chain = get_rag_chain()
+    # Create an instance of the callback handler to log fallbacks
+    fallback_logger = FallbackLoggingCallbackHandler()
     try:
         ai_response = await rag_chain.ainvoke(
-            {"session_id": session_id, "question": user_question}
+            {"session_id": session_id, "question": user_question},
+            # Pass the callback handler to the chain invocation
+            config={"callbacks": [fallback_logger]},
         )
 
         # 4. Send the generated response back to the user
