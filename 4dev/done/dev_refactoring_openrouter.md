@@ -164,6 +164,7 @@
     *   Зависимость `langchain-mistralai` заменена на `langchain-openai` для поддержки OpenAI-совместимых API.
     *   `ChatMistralAI` заменен на `ChatOpenAI`, настроенный для работы с эндпоинтом OpenRouter.
     *   Конфигурация обновлена для использования `OPENROUTER_API_KEY` и `OPENROUTER_API_BASE`.
+    *   В конфигурацию добавлены параметры `OPENROUTER_TEMPERATURE` и `OPENROUTER_MAX_TOKENS` для гибкого управления креативностью и длиной ответов LLM.
 
 2.  **Реализация механизма фолбэка (`app/core/chain.py`, `app/config.py`):**
     *   **Проблема:** Бесплатные и популярные модели часто недоступны из-за `RateLimitError`.
