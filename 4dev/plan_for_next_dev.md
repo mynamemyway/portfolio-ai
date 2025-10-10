@@ -1,8 +1,3 @@
-1. Убрать ошибки внутренней системы телеметрии ChromaDB
- ERROR:chromadb.telemetry.product.posthog:Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
-
- ERROR:chromadb.telemetry.product.posthog:Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
-
 2. Как улучшить обновление базы знаний без необходимости удаления? Реализовать проверку дубликатов?
 
  Как это можно сделать:
@@ -18,13 +13,20 @@
 3. Отредактироварь:
  app/knowledge_base/prime_networking_my_portfolio_project_README.md
 
-4. Собрать все планы по реализации в один подробный документ
+5. Развернуть бота на рендер или своём сервере
 
-5. Выпустить релиз - обновить репу
+6. Реализовать выбор моделей Mistral
 
-6. Развернуть бота на рендер или своём сервере
+7. Добавить интерактивное меню в чат: контакты, ссылка на гит, проекты
+ Добавь кнопки (inline или обычные): например, `/projects`, `/skills`, `/contact` — это улучшит UX.
+ Добавить фото к приветствию
 
-7. Реализовать выбор моделей Mistral
+8. Добавь логирование и контрольные точки (например, что было извлечено из RAG, сколько токенов использовано и т.д.).
+
+9. Добавь юнит-тесты для RAG-цепочки, обработчиков и индексации.
+
+10. Добавить сбор статистики: сколько пользователей, какие вопросы популярны и т.д.
+
 
 ---
 

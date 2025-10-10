@@ -5,6 +5,7 @@ import logging
 import sys
 
 from aiogram import Bot, Dispatcher, F, Router
+from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from langchain_core.messages import AIMessage, HumanMessage
@@ -17,6 +18,15 @@ from app.core.memory import get_chat_memory
 router = Router()
 
 
+class TelemetryFilter(logging.Filter):
+    """
+    A custom logging filter to suppress noisy telemetry errors from ChromaDB.
+    """
+    def filter(self, record: logging.LogRecord) -> bool:
+        # Suppress logs from ChromaDB's telemetry module
+        return not record.name.startswith("chromadb.telemetry.product.posthog")
+
+
 @router.message(CommandStart())
 async def handle_start(message: Message):
     """
@@ -24,9 +34,14 @@ async def handle_start(message: Message):
     Sends a welcome message to the user explaining the bot's purpose.
     """
     welcome_message = (
-        "Здравствуйте! Я — ваш персональный AI-ассистент по портфолио. "
-        "Я здесь, чтобы ответить на ваши вопросы об опыте, проектах и "
-        "технических навыках специалиста. Задайте мне вопрос."
+        "```python\n"
+        "Инициализация...\n\n"
+        "Протокол Portfolio AI v0.3.0 активирован\\.\n"
+        "Я — цифровая копия Python разработчика Александра\\.\n"
+        "Мои базы данных содержат полные стеки, архитектурные решения "
+        "и детали реализации проекта PrimeNetworking\\.\n\n"
+        "Задайте вопрос, чтобы начать знакомство\\.\n"
+        "```"
     )
     await message.answer(welcome_message)
 
@@ -52,7 +67,10 @@ async def handle_message(message: Message, bot: Bot):
         )
 
         # 4. Send the generated response back to the user
-        await message.answer(ai_response)
+        # Sanitize the response to prevent breaking the code block and wrap it.
+        safe_response = ai_response.replace("```", "`` ` ``")
+        formatted_response = f"```\n{safe_response}\n```"
+        await message.answer(formatted_response)
 
         # 5. Manually save the context to the chat history
         # The RAG chain loads history, but saving is handled here.
@@ -64,7 +82,13 @@ async def handle_message(message: Message, bot: Bot):
         # Log the full error for debugging purposes
         logging.error(f"Error processing message for user {session_id}: {e}", exc_info=True)
         # Inform the user that an error occurred
-        await message.answer("К сожалению, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.")
+        error_text = (
+            "```python\n"
+            "К сожалению, произошла ошибка при обработке вашего запроса\\."
+            "Пожалуйста, попробуйте еще раз позже\\."
+            "```"
+        )
+        await message.answer(error_text)
 
 
 async def main() -> None:
@@ -73,8 +97,20 @@ async def main() -> None:
     This function sets up the bot and dispatcher, registers handlers (in the future),
     and starts polling for updates from Telegram.
     """
+    # Configure logging first to ensure handlers and filters are set up correctly.
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+
+    # Add the custom filter to the root logger to suppress ChromaDB telemetry errors
+    telemetry_filter = TelemetryFilter()
+    # Apply the filter to all existing handlers of the root logger.
+    for handler in logging.getLogger().handlers:
+        handler.addFilter(telemetry_filter)
+
     # Initialize Bot and Dispatcher instances. The bot token is read from the settings.
-    bot = Bot(token=settings.BOT_TOKEN)
+    bot = Bot(
+        token=settings.BOT_TOKEN,
+        default=DefaultBotProperties(parse_mode="MarkdownV2"),
+    )
     dp = Dispatcher()
 
     # Include the router in the dispatcher. This registers all handlers from the router.
@@ -86,6 +122,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    # Configure logging to output to standard output with the INFO level.
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     asyncio.run(main())
