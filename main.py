@@ -36,11 +36,11 @@ async def handle_start(message: Message):
     welcome_message = (
         "```python\n"
         "Инициализация...\n\n"
-        "Протокол Portfolio AI v0.3.0 активирован.\n"
-        "Я — цифровая копия Python разработчика Александра.\n"
+        "Протокол Portfolio AI v0.3.0 активирован\\.\n"
+        "Я — цифровая копия Python разработчика Александра\\.\n"
         "Мои базы данных содержат полные стеки, архитектурные решения "
-        "и детали реализации проекта PrimeNetworking.\n\n"
-        "Задайте вопрос, чтобы начать знакомство.\n"
+        "и детали реализации проекта PrimeNetworking\\.\n\n"
+        "Задайте вопрос, чтобы начать знакомство\\.\n"
         "```"
     )
     await message.answer(welcome_message)
@@ -79,13 +79,9 @@ async def handle_message(message: Message, bot: Bot):
         # Log the full error for debugging purposes
         logging.error(f"Error processing message for user {session_id}: {e}", exc_info=True)
         # Inform the user that an error occurred
-        await message.answer(
-            "```python\n"
-            "К сожалению, произошла ошибка при обработке вашего запроса. "
-            "Пожалуйста, попробуйте еще раз позже."
-            "```"
-        )
-            
+        await message.answer("К сожалению, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.")
+
+
 async def main() -> None:
     """
     Initializes and starts the Telegram bot.
