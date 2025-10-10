@@ -1,10 +1,5 @@
 # app/core/rag.py
 
-import os
-# Force disable ChromaDB telemetry before any Chroma imports
-# This is a robust way to prevent telemetry errors.
-os.environ["ANONYMIZED_TELEMETRY"] = "False"
-
 import asyncio
 import sys
 import logging
