@@ -64,14 +64,26 @@ def get_rag_chain():
         A Runnable object representing the complete conversational RAG chain.
     """
     # 1. Initialize components
-    # Initialize the LLM using ChatOpenAI, configured for OpenRouter
-    llm = ChatOpenAI(
+    # Initialize the primary LLM using the main model from settings
+    primary_llm = ChatOpenAI(
         model=settings.OPENROUTER_CHAT_MODEL,
         openai_api_key=settings.OPENROUTER_API_KEY,
         base_url=settings.OPENROUTER_API_BASE,
         temperature=settings.OPENROUTER_TEMPERATURE,  # Controls the creativity of the response
         max_tokens=settings.OPENROUTER_MAX_TOKENS,  # Limits the length of the generated response
     )
+
+    # Initialize the fallback LLM using the backup model from settings
+    fallback_llm = ChatOpenAI(
+        model=settings.OPENROUTER_FALLBACK_MODEL,
+        openai_api_key=settings.OPENROUTER_API_KEY,
+        base_url=settings.OPENROUTER_API_BASE,
+        temperature=settings.OPENROUTER_TEMPERATURE,
+        max_tokens=settings.OPENROUTER_MAX_TOKENS,
+    )
+
+    # Create a resilient LLM component with a fallback mechanism
+    llm = primary_llm.with_fallbacks([fallback_llm])
 
     retriever = get_vector_store().as_retriever()
 
