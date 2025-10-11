@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # Determines if the bot's response should be wrapped in a markdown code block
     RESPONSE_AS_CODE_BLOCK: bool = False
 
+    # (Optional) Path to the welcome photo for the /start command
+    WELCOME_PHOTO_PATH: str | None = None
+
     # Pydantic model configuration
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
