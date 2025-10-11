@@ -34,6 +34,26 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+def get_hello_world_keyboard() -> InlineKeyboardMarkup:
+    """
+    Builds and returns an alternative main keyboard for the 'Hello world!' view.
+
+    This keyboard replaces the 'Hello world!' button with a 'back' button to
+    return to the initial welcome message, creating a toggle effect.
+    """
+    builder = InlineKeyboardBuilder()
+    # This button returns the user to the initial welcome message.
+    builder.button(
+        text="⬅️ about Portfolio AI", callback_data=MainMenuCallback(action="about_portfolio")
+    )
+    builder.button(text="Skills", callback_data=MainMenuCallback(action="skills"))
+    builder.button(text="Projects", callback_data=MainMenuCallback(action="projects"))
+    builder.button(text="Contacts", callback_data=MainMenuCallback(action="contact"))
+    # The layout is identical to the main keyboard for consistency.
+    builder.adjust(1, 3)
+    return builder.as_markup()
+
+
 def get_contact_keyboard() -> InlineKeyboardMarkup:
     """
     Builds and returns the contact information inline keyboard.
