@@ -25,11 +25,12 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
     This keyboard provides users with primary navigation options.
     """
     builder = InlineKeyboardBuilder()
+    builder.button(text="About me", callback_data=MainMenuCallback(action="about_me"))
     builder.button(text="Skills", callback_data=MainMenuCallback(action="skills"))
     builder.button(text="Projects", callback_data=MainMenuCallback(action="projects"))
     builder.button(text="Contacts", callback_data=MainMenuCallback(action="contact"))
-    # Arrange the buttons in a single row with 3 buttons.
-    builder.adjust(3)
+    # Arrange the buttons: 1 button in the first row, 3 in the second.
+    builder.adjust(1, 3)
     return builder.as_markup()
 
 
