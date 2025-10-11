@@ -10,6 +10,7 @@
 
 <details>
 <summary>Посмотреть скриншот</summary>
+<img width="1060" height="670" alt="Снимок экрана 2025-10-12 в 02 20 58" src="https://github.com/user-attachments/assets/9ae5a8e3-4421-4cfa-81fa-79bbeca2744f" />
 
 </details>
 
