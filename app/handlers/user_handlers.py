@@ -16,6 +16,7 @@ from app.keyboards import (
     MainMenuCallback,
     get_contact_keyboard,
     get_main_keyboard,
+    get_hello_world_keyboard,
     get_projects_keyboard,
 )
 from app.utils.text_formatters import escape_markdown_v2, sanitize_for_telegram_markdown
@@ -171,11 +172,27 @@ async def handle_main_menu_button(
     match callback_data.action:
         case "hello":
             try:
-                # Edit the message to show the static "Hello world!" text
-                # while keeping the main keyboard for further navigation.
+                # Edit the message to show the static "Hello world!" text and
+                # switch to the alternative keyboard with a "back" button.
                 await _edit_message(
                     query.message,
-                    HELLO_WORLD_TEXT, reply_markup=get_main_keyboard()
+                    HELLO_WORLD_TEXT, reply_markup=get_hello_world_keyboard()
+                )
+            except TelegramBadRequest as e:
+                # This error occurs if the user repeatedly clicks the button.
+                # The API returns an error because the message content is not modified.
+                # We catch and ignore this specific error to avoid polluting the logs.
+                if "message is not modified" in str(e):
+                    pass
+                else:
+                    # Re-raise any other TelegramBadRequest errors for debugging.
+                    raise
+        case "about_portfolio":
+            try:
+                # This handles the "back" button from the "Hello world!" view,
+                # returning the user to the initial welcome message and main keyboard.
+                await _edit_message(
+                    query.message, WELCOME_MESSAGE_TEXT, reply_markup=get_main_keyboard()
                 )
             except TelegramBadRequest as e:
                 # This error occurs if the user repeatedly clicks the button.
