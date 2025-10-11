@@ -128,9 +128,9 @@ async def handle_main_menu_button(
     predefined_question = ""
     match callback_data.action:
         case "skills":
-            predefined_question = "Расскажи подробно о своих профессиональных навыках и технологическом стеке."
+            predefined_question = "Расскажи кратко о своих профессиональных навыках и технологическом стеке."
         case "projects":
-            predefined_question = "Расскажи подробно о своих ключевых проектах."
+            predefined_question = "Расскажи кратко о своих ключевых проектах."
         case "contact":
             predefined_question = "Предоставь контактную информацию для связи."
 
