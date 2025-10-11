@@ -1,16 +1,18 @@
 # app/handlers/user_handlers.py
 
 import logging
+from pathlib import Path
 
 from aiogram import Bot, F, Router
 from aiogram.filters import CommandStart
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, FSInputFile, Message
 from langchain_core.messages import AIMessage, HumanMessage
 
 from app.config import settings
 from app.core.chain import FallbackLoggingCallbackHandler, get_rag_chain
 from app.core.memory import get_chat_memory
+from app.keyboards import MainMenuCallback, get_main_keyboard
 from app.utils.text_formatters import escape_markdown_v2, sanitize_for_telegram_markdown
 
 # Create a new Router instance for user-facing handlers.
@@ -18,36 +20,49 @@ router = Router()
 
 
 @router.message(CommandStart())
-async def handle_start(message: Message):
-    """
-    Handles the /start command.
-    Sends a welcome message to the user explaining the bot's purpose.
-    """
+async def handle_start(message: Message, bot: Bot):
+    """Handles the /start command, sending a welcome message with a photo (if configured) and an inline keyboard for primary actions."""
     welcome_message = (
         "```python\n"
         "Инициализация...\n\n"
         "Протокол Portfolio AI v0.4.0 активирован.\n"
         "Я — цифровая копия Python разработчика Александра.\n"
-        "Мои базы данных содержат полные стеки, архитектурные решения "
-        "и детали реализации проекта PrimeNetworking.\n\n"
-        "Задайте вопрос, чтобы начать знакомство.\n"
+        "Мои базы данных содержат информацию о его навыках, проектах и опыте.\n\n"
+        "Используйте кнопки ниже или задайте свой вопрос.\n"
         "```"
     )
-    await message.answer(welcome_message)
+    main_keyboard = get_main_keyboard()
+
+    photo_path = settings.WELCOME_PHOTO_PATH
+    # Check if a welcome photo path is configured and the file exists.
+    if photo_path and Path(photo_path).is_file():
+        photo = FSInputFile(photo_path)
+        await message.answer_photo(
+            photo=photo, caption=welcome_message, reply_markup=main_keyboard
+        )
+    else:
+        # If the path is set but the file is not found, log a warning.
+        if photo_path:
+            logging.warning(
+                f"Welcome photo file not found at the specified path: {photo_path}"
+            )
+        # Fallback to sending a text message if no photo is available.
+        await message.answer(welcome_message, reply_markup=main_keyboard)
 
 
-@router.message(F.text)
-async def handle_message(message: Message, bot: Bot):
-    """
-    Handles incoming text messages.
-    This is the core handler that processes user queries through the RAG chain.
+async def process_query(
+    chat_id: int, user_question: str, bot: Bot, message_to_answer: Message
+):
+    """A reusable function to process a user's query through the RAG chain.
+
+    Args:
+        chat_id: The user's chat ID for session management.
+        user_question: The question to be processed.
+        bot: The Bot instance to send 'typing' action.
+        message_to_answer: The Message object to reply to.
     """
     # 1. Provide user feedback that the request is being processed
-    await bot.send_chat_action(chat_id=message.chat.id, action="typing")
-
-    # 2. Define a unique session ID for the user's chat history
-    session_id = str(message.chat.id)
-    user_question = message.text
+    await bot.send_chat_action(chat_id=chat_id, action="typing")
 
     # 3. Get the RAG chain and invoke it with the user's question
     rag_chain = get_rag_chain()
@@ -55,7 +70,7 @@ async def handle_message(message: Message, bot: Bot):
     fallback_logger = FallbackLoggingCallbackHandler()
     try:
         ai_response = await rag_chain.ainvoke(
-            {"session_id": session_id, "question": user_question},
+            {"session_id": str(chat_id), "question": user_question},
             # Pass the callback handler to the chain invocation
             config={"callbacks": [fallback_logger]},
         )
@@ -65,13 +80,13 @@ async def handle_message(message: Message, bot: Bot):
             # Sanitize the response to prevent breaking the code block and wrap it.
             safe_response = ai_response.replace("```", "`` ` ``")
             formatted_response = f"```\n{safe_response}\n```"
-            await message.answer(formatted_response)
+            await message_to_answer.answer(formatted_response)
         else:
             # Proactively sanitize the response to make it compatible with MarkdownV2.
             sanitized_response = sanitize_for_telegram_markdown(ai_response)
             try:
                 # Attempt to send the sanitized message.
-                await message.answer(sanitized_response)
+                await message_to_answer.answer(sanitized_response)
             except TelegramBadRequest as e:
                 # If even the sanitized version fails, log the error and fall back to full escaping.
                 logging.error(
@@ -80,17 +95,17 @@ async def handle_message(message: Message, bot: Bot):
                 logging.error(f"Original AI response: {ai_response}")
                 logging.error(f"Sanitized response that failed: {sanitized_response}")
                 escaped_response = escape_markdown_v2(ai_response)
-                await message.answer(escaped_response)
+                await message_to_answer.answer(escaped_response)
 
         # 5. Manually save the context to the chat history
         # The RAG chain loads history, but saving is handled here.
-        memory = get_chat_memory(session_id=session_id)
+        memory = get_chat_memory(session_id=str(chat_id))
         await memory.chat_memory.add_messages(
             [HumanMessage(content=user_question), AIMessage(content=ai_response)]
         )
     except Exception as e:
         # Log the full error for debugging purposes
-        logging.error(f"Error processing message for user {session_id}: {e}", exc_info=True)
+        logging.error(f"Error processing message for user {chat_id}: {e}", exc_info=True)
         # Inform the user that an error occurred
         error_text = (
             "```python\n"
@@ -98,4 +113,46 @@ async def handle_message(message: Message, bot: Bot):
             "Пожалуйста, попробуйте еще раз позже.\n"
             "```"
         )
-        await message.answer(error_text)
+        await message_to_answer.answer(error_text)
+
+
+@router.callback_query(MainMenuCallback.filter())
+async def handle_main_menu_button(
+    query: CallbackQuery, callback_data: MainMenuCallback, bot: Bot
+):
+    """Handles presses of the main menu's inline keyboard buttons."""
+    # Acknowledge the callback to remove the "loading" state from the button.
+    await query.answer()
+
+    # Define predefined questions for each button action.
+    predefined_question = ""
+    match callback_data.action:
+        case "skills":
+            predefined_question = "Расскажи подробно о своих профессиональных навыках и технологическом стеке."
+        case "projects":
+            predefined_question = "Расскажи подробно о своих ключевых проектах."
+        case "contact":
+            predefined_question = "Предоставь контактную информацию для связи."
+
+    if predefined_question and query.message:
+        # Call the reusable query processing function.
+        await process_query(
+            chat_id=query.message.chat.id,
+            user_question=predefined_question,
+            bot=bot,
+            message_to_answer=query.message,
+        )
+
+
+@router.message(F.text)
+async def handle_message(message: Message, bot: Bot):
+    """Handles incoming text messages by passing them to the query processor."""
+    if not message.text:
+        return
+
+    await process_query(
+        chat_id=message.chat.id,
+        user_question=message.text,
+        bot=bot,
+        message_to_answer=message,
+    )
