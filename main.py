@@ -2,11 +2,13 @@
 
 import asyncio
 import logging
+import re
 import sys
 
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import Message
 from langchain_core.messages import AIMessage, HumanMessage
 
@@ -27,6 +29,71 @@ class TelemetryFilter(logging.Filter):
         return not record.name.startswith("chromadb.telemetry.product.posthog")
 
 
+def escape_markdown_v2(text: str) -> str:
+    """
+    Escapes special characters for Telegram's MarkdownV2 parse mode.
+
+    Args:
+        text: The input string to be escaped.
+    Returns:
+        The string with all special MarkdownV2 characters escaped.
+    """
+    escape_chars = r"([_*\[\]()~`>#+\-=|{}.!])"
+    return re.sub(escape_chars, r"\\\1", text)
+
+
+def sanitize_for_telegram_markdown(text: str) -> str:
+    """
+    Proactively sanitizes text to make it compatible with Telegram's MarkdownV2.
+
+    This function converts unsupported markdown (like headers) into a supported
+    format and escapes specific characters that are known to cause parsing errors.
+
+    Args:
+        text: The raw string from the LLM to be sanitized.
+    Returns:
+        A sanitized string ready for Telegram's MarkdownV2 parser.
+    """
+    if not text:
+        return ""
+
+    processed_lines = []
+    for line in text.split('\n'):
+        # Preserve empty lines
+        if not line.strip():
+            processed_lines.append(line)
+            continue
+
+        # Make a copy to modify
+        processed_line = line
+
+        # Rule 1: Convert main headers (e.g., ### Title) to bold text.
+        processed_line = re.sub(r'^\s*#+\s+(.+)', r'*\1*', processed_line)
+
+        # Rule 2: Convert list headers (e.g., "- **Tools:**") to just bold text.
+        processed_line = re.sub(r'^\s*-\s+(\*\*.*?\*\*)', r'\1', processed_line)
+
+        # Rule 3: Convert indented list items (e.g., "  - Ruff") to use a bullet point.
+        processed_line = re.sub(r'^(\s+)-\s+', r'\1• ', processed_line)
+
+        # Rule 4: Convert any remaining top-level list items.
+        processed_line = re.sub(r'^\s*-\s+', '• ', processed_line)
+
+        # Rule 5: Convert standard markdown bold (**text**) to Telegram's MarkdownV2 bold (*text*).
+        processed_line = re.sub(r'\*\*(.*?)\*\*', r'*\1*', processed_line)
+
+        processed_lines.append(processed_line)
+
+    # Join the lines back and perform a final escape of all special characters.
+    sanitized_text = '\n'.join(processed_lines)
+
+    # Final escape for all special characters not part of intended formatting.
+    escape_chars = r"(?<!\\)([\[\]\(\)~`>+\-=|{}.!])"
+    sanitized_text = re.sub(escape_chars, r'\\\1', sanitized_text)
+
+    return sanitized_text
+
+
 @router.message(CommandStart())
 async def handle_start(message: Message):
     """
@@ -36,11 +103,11 @@ async def handle_start(message: Message):
     welcome_message = (
         "```python\n"
         "Инициализация...\n\n"
-        "Протокол Portfolio AI v0.3.0 активирован\\.\n"
-        "Я — цифровая копия Python разработчика Александра\\.\n"
+        "Протокол Portfolio AI v0.4.0 активирован.\n"
+        "Я — цифровая копия Python разработчика Александра.\n"
         "Мои базы данных содержат полные стеки, архитектурные решения "
-        "и детали реализации проекта PrimeNetworking\\.\n\n"
-        "Задайте вопрос, чтобы начать знакомство\\.\n"
+        "и детали реализации проекта PrimeNetworking.\n\n"
+        "Задайте вопрос, чтобы начать знакомство.\n"
         "```"
     )
     await message.answer(welcome_message)
@@ -70,11 +137,27 @@ async def handle_message(message: Message, bot: Bot):
             config={"callbacks": [fallback_logger]},
         )
 
-        # 4. Send the generated response back to the user
-        # Sanitize the response to prevent breaking the code block and wrap it.
-        safe_response = ai_response.replace("```", "`` ` ``")
-        formatted_response = f"```\n{safe_response}\n```"
-        await message.answer(formatted_response)
+        # 4. Send the generated response based on the configuration setting
+        if settings.RESPONSE_AS_CODE_BLOCK:
+            # Sanitize the response to prevent breaking the code block and wrap it.
+            safe_response = ai_response.replace("```", "`` ` ``")
+            formatted_response = f"```\n{safe_response}\n```"
+            await message.answer(formatted_response)
+        else:
+            # Proactively sanitize the response to make it compatible with MarkdownV2.
+            sanitized_response = sanitize_for_telegram_markdown(ai_response)
+            try:
+                # Attempt to send the sanitized message.
+                await message.answer(sanitized_response)
+            except TelegramBadRequest as e:
+                # If even the sanitized version fails, log the error and fall back to full escaping.
+                logging.error(
+                    f"Sanitized message failed to send. Error: {e}. Falling back to full escape."
+                )
+                logging.error(f"Original AI response: {ai_response}")
+                logging.error(f"Sanitized response that failed: {sanitized_response}")
+                escaped_response = escape_markdown_v2(ai_response)
+                await message.answer(escaped_response)
 
         # 5. Manually save the context to the chat history
         # The RAG chain loads history, but saving is handled here.
@@ -88,8 +171,8 @@ async def handle_message(message: Message, bot: Bot):
         # Inform the user that an error occurred
         error_text = (
             "```python\n"
-            "К сожалению, произошла ошибка при обработке вашего запроса\\."
-            "Пожалуйста, попробуйте еще раз позже\\."
+            "К сожалению, произошла ошибка при обработке вашего запроса.\n"
+            "Пожалуйста, попробуйте еще раз позже.\n"
             "```"
         )
         await message.answer(error_text)

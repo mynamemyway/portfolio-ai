@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     
     # The specific chat model to use from OpenRouter
     # Best="google/gemini-2.0-flash-exp:free"
+    # Second="mistralai/mistral-medium-3.1"
     OPENROUTER_CHAT_MODEL: str = "mistralai/mistral-medium-3.1"
     
     # The fallback model to use if the primary model fails
@@ -35,6 +36,9 @@ class Settings(BaseSettings):
     
     # Number of messages to keep in the conversation window memory
     MEMORY_WINDOW_SIZE: int = 10
+
+    # Determines if the bot's response should be wrapped in a markdown code block
+    RESPONSE_AS_CODE_BLOCK: bool = False
 
     # Pydantic model configuration
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
