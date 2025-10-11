@@ -170,12 +170,22 @@ async def handle_main_menu_button(
 
     match callback_data.action:
         case "hello":
-            # Edit the message to show the static "Hello world!" text
-            # while keeping the main keyboard for further navigation.
-            await _edit_message(
-                query.message,
-                HELLO_WORLD_TEXT, reply_markup=get_main_keyboard()
-            )
+            try:
+                # Edit the message to show the static "Hello world!" text
+                # while keeping the main keyboard for further navigation.
+                await _edit_message(
+                    query.message,
+                    HELLO_WORLD_TEXT, reply_markup=get_main_keyboard()
+                )
+            except TelegramBadRequest as e:
+                # This error occurs if the user repeatedly clicks the button.
+                # The API returns an error because the message content is not modified.
+                # We catch and ignore this specific error to avoid polluting the logs.
+                if "message is not modified" in str(e):
+                    pass
+                else:
+                    # Re-raise any other TelegramBadRequest errors for debugging.
+                    raise
         case "skills":
             predefined_question = "Расскажи кратко о своих профессиональных навыках и технологическом стеке."
             await process_query(
