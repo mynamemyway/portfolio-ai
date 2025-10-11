@@ -25,7 +25,7 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
     This keyboard provides users with primary navigation options.
     """
     builder = InlineKeyboardBuilder()
-    builder.button(text="Hello world!", callback_data=MainMenuCallback(action="hello"))
+    builder.button(text="➡️ Hello world!", callback_data=MainMenuCallback(action="hello"))
     builder.button(text="Skills", callback_data=MainMenuCallback(action="skills"))
     builder.button(text="Projects", callback_data=MainMenuCallback(action="projects"))
     builder.button(text="Contacts", callback_data=MainMenuCallback(action="contact"))
