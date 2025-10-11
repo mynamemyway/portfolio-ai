@@ -18,6 +18,8 @@ app/db/
 # macOS specific
 .DS_Store
 
+# Welcome photo
+assets/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
