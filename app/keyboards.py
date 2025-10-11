@@ -85,7 +85,7 @@ def get_projects_keyboard() -> InlineKeyboardMarkup:
     )
     builder.button(text="PrimeNetworking on Git", url="https://github.com/mynamemyway/prime-net-docs")
     builder.button(text="Portfolio AI on Git", url="https://github.com/mynamemyway/portfolio-ai")
-    builder.button(text="⬅️ Returne", callback_data=MainMenuCallback(action="back_to_main"))
+    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
     # Arrange the buttons: each on a new line for better readability.
     builder.adjust(1, 1, 1, 1)
     return builder.as_markup()
@@ -101,14 +101,14 @@ def get_help_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     # Callback buttons for bot actions
     builder.button(
-        text="🔄 Перезапустить сессию",
+        text="🔄 Restart",
         callback_data=MainMenuCallback(action="restart_session"),
     )
     builder.button(
-        text="🗑️ Очистить историю", callback_data=MainMenuCallback(action="reset_chat")
+        text="🗑️ Clear history", callback_data=MainMenuCallback(action="reset_chat")
     )
     # URL buttons for direct contact
     builder.button(text="Telegram", url="https://t.me/mynamemyway")
-    builder.button(text="Email", url="mailto:samokhvaloff.on@gmail.com")
+    builder.button(text="⬅️ Rerurn", callback_data=MainMenuCallback(action="back_to_main"))
     builder.adjust(2, 2)
     return builder.as_markup()
