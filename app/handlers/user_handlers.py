@@ -6,7 +6,7 @@ from pathlib import Path
 from aiogram import Bot, F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, FSInputFile, Message, InlineKeyboardMarkup
+from aiogram.types import CallbackQuery, FSInputFile, Message, InlineKeyboardMarkup, InputMediaPhoto
 from langchain_core.messages import AIMessage, HumanMessage
 
 from app.config import settings
@@ -191,21 +191,35 @@ async def process_query(
 
 
 async def _edit_message(
-    message: Message, text: str, reply_markup: InlineKeyboardMarkup | None = None
+    message: Message,
+    text: str,
+    reply_markup: InlineKeyboardMarkup | None = None,
+    photo_path: str | None = None,
 ):
     """
-    A helper function to edit a message, handling both text and caption cases.
-
-    This function checks if the message has a caption (i.e., it's a photo message)
-    or regular text and uses the appropriate edit method to avoid Telegram API errors.
+    A helper function to edit a message, handling text, caption, and media changes.
 
     Args:
         message: The message object to edit.
         text: The new text or caption for the message.
         reply_markup: The new inline keyboard markup.
+        photo_path: The path to a new photo to replace the existing one.
     """
-    if message.caption:
+    # Case 1: A new photo is provided, and the message already has media.
+    # We use edit_media to replace the photo, caption, and keyboard.
+    if photo_path and Path(photo_path).is_file() and message.photo:
+        photo = FSInputFile(photo_path)
+        # Create a specific InputMediaPhoto object as required by the API.
+        media = InputMediaPhoto(media=photo, caption=text)
+        await message.edit_media(media=media, reply_markup=reply_markup)
+
+    # Case 2: No new photo is provided, but the message has a caption.
+    # We only edit the caption and keyboard.
+    elif message.caption:
         await message.edit_caption(caption=text, reply_markup=reply_markup)
+
+    # Case 3: The message is a simple text message.
+    # We edit the text and keyboard.
     else:
         await message.edit_text(text=text, reply_markup=reply_markup)
 
@@ -245,7 +259,10 @@ async def handle_main_menu_button(
                 # This handles the "back" button from the "Hello world!" view,
                 # returning the user to the initial welcome message and main keyboard.
                 await _edit_message(
-                    query.message, WELCOME_MESSAGE_TEXT, reply_markup=get_main_keyboard()
+                    query.message,
+                    WELCOME_MESSAGE_TEXT,
+                    reply_markup=get_main_keyboard(),
+                    photo_path=settings.WELCOME_PHOTO_PATH,
                 )
             except TelegramBadRequest as e:
                 # This error occurs if the user repeatedly clicks the button.
@@ -277,7 +294,9 @@ async def handle_main_menu_button(
         case "back_to_main":
             await _edit_message(
                 query.message,
-                WELCOME_MESSAGE_TEXT, reply_markup=get_main_keyboard()
+                WELCOME_MESSAGE_TEXT,
+                reply_markup=get_main_keyboard(),
+                photo_path=settings.WELCOME_PHOTO_PATH,
             )
         case "show_project_primenet":
             predefined_question = "Расскажи кратко о проекте PrimeNet."
