@@ -15,6 +15,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from app.config import settings
 from app.core.chain import FallbackLoggingCallbackHandler, get_rag_chain
 from app.core.memory import get_chat_memory
+from app.ui_commands import set_ui_commands
 
 # Create a new Router instance. Routers are used to structure handlers.
 router = Router()
@@ -202,6 +203,9 @@ async def main() -> None:
 
     # Include the router in the dispatcher. This registers all handlers from the router.
     dp.include_router(router)
+
+    # Set the bot's UI commands (e.g., /start, /help) in the Telegram menu.
+    await set_ui_commands(bot)
 
     # Start the polling process to receive updates from Telegram.
     # This will run indefinitely until the process is stopped.
