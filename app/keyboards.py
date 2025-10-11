@@ -107,6 +107,6 @@ def get_help_keyboard() -> InlineKeyboardMarkup:
         text="🔄 Restart",
         callback_data=MainMenuCallback(action="restart_session"),
     )
-    builder.button(text="⬅️ Rerurn", callback_data=MainMenuCallback(action="back_to_main"))
+    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
     builder.adjust(2, 2)
     return builder.as_markup()
