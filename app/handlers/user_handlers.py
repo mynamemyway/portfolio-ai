@@ -12,25 +12,27 @@ from langchain_core.messages import AIMessage, HumanMessage
 from app.config import settings
 from app.core.chain import FallbackLoggingCallbackHandler, get_rag_chain
 from app.core.memory import get_chat_memory
-from app.keyboards import MainMenuCallback, get_main_keyboard
+from app.keyboards import MainMenuCallback, get_contact_keyboard, get_main_keyboard
 from app.utils.text_formatters import escape_markdown_v2, sanitize_for_telegram_markdown
 
 # Create a new Router instance for user-facing handlers.
 router = Router()
 
+# Define the welcome message as a constant for reusability.
+WELCOME_MESSAGE_TEXT = (
+    "```python\n"
+    "Инициализация...\n\n"
+    "Протокол Portfolio AI v0.4.0 активирован.\n"
+    "Я — цифровая копия Python разработчика Александра.\n"
+    "Мои базы данных содержат информацию о его навыках, проектах и опыте.\n\n"
+    "Используйте кнопки ниже или задайте свой вопрос.\n"
+    "```"
+)
+
 
 @router.message(CommandStart())
-async def handle_start(message: Message, bot: Bot):
+async def handle_start(message: Message):
     """Handles the /start command, sending a welcome message with a photo (if configured) and an inline keyboard for primary actions."""
-    welcome_message = (
-        "```python\n"
-        "Инициализация...\n\n"
-        "Протокол Portfolio AI v0.4.0 активирован.\n"
-        "Я — цифровая копия Python разработчика Александра.\n"
-        "Мои базы данных содержат информацию о его навыках, проектах и опыте.\n\n"
-        "Используйте кнопки ниже или задайте свой вопрос.\n"
-        "```"
-    )
     main_keyboard = get_main_keyboard()
 
     photo_path = settings.WELCOME_PHOTO_PATH
@@ -38,7 +40,7 @@ async def handle_start(message: Message, bot: Bot):
     if photo_path and Path(photo_path).is_file():
         photo = FSInputFile(photo_path)
         await message.answer_photo(
-            photo=photo, caption=welcome_message, reply_markup=main_keyboard
+            photo=photo, caption=WELCOME_MESSAGE_TEXT, reply_markup=main_keyboard
         )
     else:
         # If the path is set but the file is not found, log a warning.
@@ -47,7 +49,7 @@ async def handle_start(message: Message, bot: Bot):
                 f"Welcome photo file not found at the specified path: {photo_path}"
             )
         # Fallback to sending a text message if no photo is available.
-        await message.answer(welcome_message, reply_markup=main_keyboard)
+        await message.answer(WELCOME_MESSAGE_TEXT, reply_markup=main_keyboard)
 
 
 async def process_query(
@@ -124,29 +126,38 @@ async def handle_main_menu_button(
     # Acknowledge the callback to remove the "loading" state from the button.
     await query.answer()
 
-    # Define predefined questions for each button action.
-    predefined_question = ""
+    # Ensure there's a message to edit.
+    if not query.message:
+        return
+
     match callback_data.action:
         case "skills":
-            predefined_question = "Расскажи кратко о своих профессиональных навыках и технологическом стеке."
+            predefined_question = "Расскажи подробно о своих профессиональных навыках и технологическом стеке."
+            await process_query(
+                chat_id=query.message.chat.id,
+                user_question=predefined_question,
+                bot=bot,
+                message_to_answer=query.message,
+            )
         case "projects":
-            predefined_question = "Расскажи кратко о своих ключевых проектах."
+            predefined_question = "Расскажи подробно о своих ключевых проектах."
+            await process_query(
+                chat_id=query.message.chat.id,
+                user_question=predefined_question,
+                bot=bot,
+                message_to_answer=query.message,
+            )
         case "contact":
-            predefined_question = "Предоставь контактную информацию для связи."
-
-    if predefined_question and query.message:
-        # Call the reusable query processing function.
-        await process_query(
-            chat_id=query.message.chat.id,
-            user_question=predefined_question,
-            bot=bot,
-            message_to_answer=query.message,
-        )
+            await query.message.edit_text("Выберите способ связи:", reply_markup=get_contact_keyboard())
+        case "back_to_main":
+            await query.message.edit_text(WELCOME_MESSAGE_TEXT, reply_markup=get_main_keyboard())
 
 
 @router.message(F.text)
 async def handle_message(message: Message, bot: Bot):
     """Handles incoming text messages by passing them to the query processor."""
+    if not message.text:
+        return
     if not message.text:
         return
 
