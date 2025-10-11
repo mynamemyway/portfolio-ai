@@ -31,3 +31,20 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
     # Arrange the buttons in a single row with 3 buttons.
     builder.adjust(3)
     return builder.as_markup()
+
+
+def get_contact_keyboard() -> InlineKeyboardMarkup:
+    """
+    Builds and returns the contact information inline keyboard.
+
+    This keyboard provides URL buttons for social profiles and a back button
+    to return to the main menu.
+    """
+    builder = InlineKeyboardBuilder()
+    builder.button(text="MyGitHub", url="https://github.com/mynamemyway")
+    builder.button(text="Telegram", url="https://t.me/mynamemyway")
+    builder.button(text="Instagram", url="https://instagram.com/myname_myway")
+    builder.button(text="⬅️ Назад", callback_data=MainMenuCallback(action="back_to_main"))
+    # Arrange the buttons: 3 links in the first row, 1 back button in the second.
+    builder.adjust(3, 1)
+    return builder.as_markup()
