@@ -41,10 +41,29 @@ def get_contact_keyboard() -> InlineKeyboardMarkup:
     to return to the main menu.
     """
     builder = InlineKeyboardBuilder()
-    builder.button(text="MyGitHub", url="https://github.com/mynamemyway")
+    builder.button(text="My GitHub", url="https://github.com/mynamemyway")
     builder.button(text="Telegram", url="https://t.me/mynamemyway")
     builder.button(text="Instagram", url="https://instagram.com/myname_myway")
     builder.button(text="⬅️ Назад", callback_data=MainMenuCallback(action="back_to_main"))
     # Arrange the buttons: 3 links in the first row, 1 back button in the second.
     builder.adjust(3, 1)
+    return builder.as_markup()
+
+
+def get_projects_keyboard() -> InlineKeyboardMarkup:
+    """
+    Builds and returns the projects submenu inline keyboard.
+
+    This keyboard provides options to learn more about a specific project
+    or view its source code.
+    """
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="Расскажи о PrimeNet",
+        callback_data=MainMenuCallback(action="show_project_primenet"),
+    )
+    builder.button(text="PrimeNet на GitHub", url="https://github.com/mynamemyway/prime-net-docs")
+    builder.button(text="⬅️ Назад", callback_data=MainMenuCallback(action="back_to_main"))
+    # Arrange the buttons: each on a new line for better readability.
+    builder.adjust(1, 1, 1)
     return builder.as_markup()
