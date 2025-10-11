@@ -59,11 +59,12 @@ def get_projects_keyboard() -> InlineKeyboardMarkup:
     """
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="Расскажи о PrimeNet",
+        text="Расскажи о PrimeNetworking",
         callback_data=MainMenuCallback(action="show_project_primenet"),
     )
-    builder.button(text="PrimeNet на GitHub", url="https://github.com/mynamemyway/prime-net-docs")
+    builder.button(text="PrimeNetworking на Git", url="https://github.com/mynamemyway/prime-net-docs")
+    builder.button(text="Portfolio AI на Git", url="https://github.com/mynamemyway/portfolio-ai")
     builder.button(text="⬅️ Назад", callback_data=MainMenuCallback(action="back_to_main"))
     # Arrange the buttons: each on a new line for better readability.
-    builder.adjust(1, 1, 1)
+    builder.adjust(1, 1, 1, 1)
     return builder.as_markup()
