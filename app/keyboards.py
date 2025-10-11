@@ -89,3 +89,26 @@ def get_projects_keyboard() -> InlineKeyboardMarkup:
     # Arrange the buttons: each on a new line for better readability.
     builder.adjust(1, 1, 1, 1)
     return builder.as_markup()
+
+
+def get_help_keyboard() -> InlineKeyboardMarkup:
+    """
+    Builds and returns the inline keyboard for the /help command message.
+
+    This keyboard provides users with quick actions to restart the session,
+    clear their chat history, and contact you directly.
+    """
+    builder = InlineKeyboardBuilder()
+    # Callback buttons for bot actions
+    builder.button(
+        text="🔄 Перезапустить сессию",
+        callback_data=MainMenuCallback(action="restart_session"),
+    )
+    builder.button(
+        text="🗑️ Очистить историю", callback_data=MainMenuCallback(action="reset_chat")
+    )
+    # URL buttons for direct contact
+    builder.button(text="Telegram", url="https://t.me/mynamemyway")
+    builder.button(text="Email", url="mailto:samokhvaloff.on@gmail.com")
+    builder.adjust(2, 2)
+    return builder.as_markup()
