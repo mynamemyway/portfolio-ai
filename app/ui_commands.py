@@ -11,7 +11,7 @@ async def set_ui_commands(bot: Bot):
     These commands provide users with quick access to the bot's main features.
     """
     commands = [
-        BotCommand(command="start", description="Перезапустить бота"),
-        BotCommand(command="help", description="Помощь и информация"),
+        BotCommand(command="start", description="Reboot"),
+        BotCommand(command="help", description="Help & info"),
     ]
     await bot.set_my_commands(commands=commands)

@@ -25,9 +25,9 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
     This keyboard provides users with primary navigation options.
     """
     builder = InlineKeyboardBuilder()
-    builder.button(text="Навыки", callback_data=MainMenuCallback(action="skills"))
-    builder.button(text="Проекты", callback_data=MainMenuCallback(action="projects"))
-    builder.button(text="Контакты", callback_data=MainMenuCallback(action="contact"))
+    builder.button(text="Skills", callback_data=MainMenuCallback(action="skills"))
+    builder.button(text="Projects", callback_data=MainMenuCallback(action="projects"))
+    builder.button(text="Contacts", callback_data=MainMenuCallback(action="contact"))
     # Arrange the buttons in a single row with 3 buttons.
     builder.adjust(3)
     return builder.as_markup()
@@ -44,7 +44,7 @@ def get_contact_keyboard() -> InlineKeyboardMarkup:
     builder.button(text="GitHub", url="https://github.com/mynamemyway")
     builder.button(text="Telegram", url="https://t.me/mynamemyway")
     builder.button(text="Instagram", url="https://instagram.com/myname_myway")
-    builder.button(text="⬅️ Назад", callback_data=MainMenuCallback(action="back_to_main"))
+    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
     # Arrange the buttons: 3 links in the first row, 1 back button in the second.
     builder.adjust(3, 1)
     return builder.as_markup()
@@ -59,12 +59,12 @@ def get_projects_keyboard() -> InlineKeyboardMarkup:
     """
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="Расскажи о PrimeNetworking",
+        text="Tell about PrimeNetworking",
         callback_data=MainMenuCallback(action="show_project_primenet"),
     )
-    builder.button(text="PrimeNetworking на Git", url="https://github.com/mynamemyway/prime-net-docs")
-    builder.button(text="Portfolio AI на Git", url="https://github.com/mynamemyway/portfolio-ai")
-    builder.button(text="⬅️ Назад", callback_data=MainMenuCallback(action="back_to_main"))
+    builder.button(text="PrimeNetworking on Git", url="https://github.com/mynamemyway/prime-net-docs")
+    builder.button(text="Portfolio AI on Git", url="https://github.com/mynamemyway/portfolio-ai")
+    builder.button(text="⬅️ Returne", callback_data=MainMenuCallback(action="back_to_main"))
     # Arrange the buttons: each on a new line for better readability.
     builder.adjust(1, 1, 1, 1)
     return builder.as_markup()
