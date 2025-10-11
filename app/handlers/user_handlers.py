@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from aiogram import Bot, F, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, FSInputFile, Message, InlineKeyboardMarkup
 from langchain_core.messages import AIMessage, HumanMessage
@@ -46,6 +46,21 @@ HELLO_WORLD_TEXT = (
     "```"
 )
 
+# Define the static text for the "/help" command.
+HELP_MESSAGE_TEXT = (
+    "```\n"
+    "## Возможные Проблемы и Решения:\n"
+    "1.  **Задержка Ответа:** Из-за обращения к внешнему LLM API, ответ может занять 5-10 секунд. Пожалуйста, подождите.\n"
+    "2.  **Бот Завис/Остановился:** Если бот не отвечает, попробуйте перезапустить сессию командой: /start\n"
+    "3.  **Неверный Контекст:** Если AI сбился с темы, используйте команду /reset, чтобы очистить историю чата и начать диалог с чистого листа.\n\n"
+    "## Прямая Связь:\n"
+    "Если у вас есть конкретные предложения по работе или вопросы, не предназначенные для AI-обсуждения, вы всегда можете:\n"
+    "📞 **Связаться со мной напрямую:** https://t.me/mynamemyway , samokhvaloff.on@gmail.com\n"
+    "```"
+)
+
+
+
 
 
 @router.message(CommandStart())
@@ -68,6 +83,12 @@ async def handle_start(message: Message, bot: Bot):
             )
         # Fallback to sending a text message if no photo is available.
         await message.answer(WELCOME_MESSAGE_TEXT, reply_markup=main_keyboard)
+
+
+@router.message(Command("help"))
+async def handle_help(message: Message):
+    """Handles the /help command by sending a static informational message."""
+    await message.answer(HELP_MESSAGE_TEXT)
 
 
 async def process_query(
