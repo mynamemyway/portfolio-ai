@@ -79,6 +79,9 @@ def sanitize_for_telegram_markdown(text: str) -> str:
         # Rule 4: Convert any remaining top-level list items.
         processed_line = re.sub(r'^\s*-\s+', '• ', processed_line)
 
+        # Rule 5: Convert standard markdown bold (**text**) to Telegram's MarkdownV2 bold (*text*).
+        processed_line = re.sub(r'\*\*(.*?)\*\*', r'*\1*', processed_line)
+
         processed_lines.append(processed_line)
 
     # Join the lines back and perform a final escape of all special characters.
