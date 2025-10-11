@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     # (Optional) Path to the welcome photo for the /start command
     WELCOME_PHOTO_PATH: str | None = None
 
+    # (Optional) Path to the help photo for the /help command
+    HELP_PHOTO_PATH: str | None = None
+
     # Pydantic model configuration
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
