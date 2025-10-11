@@ -26,6 +26,8 @@
 *   **Логика:**
     1.  Создать `CallbackData` для структурирования данных обратного вызова (например, `MainMenuCallback(action: str)`).
     2.  Создать функцию `get_main_keyboard`, которая возвращает `InlineKeyboardMarkup` с кнопками "Навыки", "Проекты", "Контакты". Каждая кнопка будет использовать `MainMenuCallback` для генерации `callback_data` (например, `main_menu:skills`).
+    3.  Создать функцию `get_contact_keyboard` для генерации подменю с кнопками-ссылками на социальные сети и кнопкой "Назад".
+    4.  Создать функцию `get_projects_keyboard` для генерации подменю с кнопкой для запроса информации о проекте, кнопками-ссылками на репозитории и кнопкой "Назад".
 
 #### **2.3. Обновление Конфигурации**
 *   **Цель:** Добавить путь к фотографии в файл конфигурации для гибкости.
@@ -44,12 +46,12 @@
 *   **Цель:** Вызвать установку команд при старте бота.
 *   **Файл:** `main.py`.
 *   **Функция / Сигнатура:** `main()`.
-*   **Логика:** В функции `main` перед запуском поллинга (`dp.start_polling(bot)`) добавить вызов `await set_ui_commands(bot)`.
+*   **Логика:** В функции `main` перед запуском поллинга (`dp.start_polling(bot)`) добавить вызов `await set_ui_commands(bot)` и подключить роутер из `app/handlers/user_handlers.py` с помощью `dp.include_router()`.
 
 #### **3.2. Обновление Приветственного Сообщения**
 *   **Цель:** Модифицировать обработчик `/start` для отправки фото и клавиатуры.
-*   **Файл:** `main.py`.
-*   **Функция / Сигнатура:** `handle_start(message: Message)`.
+*   **Файл:** `app/handlers/user_handlers.py`.
+*   **Функция / Сигнатура:** `handle_start(message: Message, bot: Bot)`.
 *   **Логика:**
     1.  Изменить логику отправки: вместо `message.answer()` использовать `message.answer_photo()`.
     2.  В `answer_photo` передать `photo=FSInputFile(settings.WELCOME_PHOTO_PATH)`, `caption=welcome_message` и `reply_markup=get_main_keyboard()`.
@@ -57,14 +59,17 @@
 
 #### **3.3. Создание Обработчиков для Кнопок**
 *   **Цель:** Реализовать реакцию на нажатие inline-кнопок.
-*   **Файл:** `main.py`.
+*   **Файл:** `app/handlers/user_handlers.py`.
 *   **Логика:**
-    1.  Создать новый обработчик `handle_main_menu_button(query: CallbackQuery, callback_data: MainMenuCallback, bot: Bot)`.
-    2.  Декорировать его с помощью `@router.callback_query(MainMenuCallback.filter())`.
-    3.  Внутри обработчика:
-        *   Ответить на `callback_query` с помощью `await query.answer()`, чтобы убрать "часики" на кнопке.
-        *   В зависимости от `callback_data.action` ("skills", "projects", "contact") определить текст вопроса к LLM (например, "Расскажи о своих навыках").
-        *   Вызвать существующую логику обработки сообщения (аналогично `handle_message`), передав ей сформированный вопрос. Это позволит переиспользовать всю RAG-цепочку.
+    1.  Вынести основную логику обработки запроса к LLM из `handle_message` в переиспользуемую функцию `process_query`.
+    2.  Создать новый обработчик `handle_main_menu_button(query: CallbackQuery, callback_data: MainMenuCallback, bot: Bot)`.
+    3.  Декорировать его с помощью `@router.callback_query(MainMenuCallback.filter())`.
+    4.  Внутри обработчика реализовать `match-case` по `callback_data.action`:
+        *   `skills`: Вызвать `process_query` с предопределенным вопросом о навыках.
+        *   `projects`: Изменить сообщение (`query.message.edit_text`), отобразив подменю проектов с клавиатурой от `get_projects_keyboard`.
+        *   `contact`: Изменить сообщение, отобразив подменю контактов с клавиатурой от `get_contact_keyboard`.
+        *   `show_project_primenet`: Вызвать `process_query` с предопределенным вопросом о проекте PrimeNet.
+        *   `back_to_main`: Изменить сообщение, вернув исходный текст приветствия и главную клавиатуру.
 
 ---
 
