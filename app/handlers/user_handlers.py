@@ -18,6 +18,7 @@ from app.keyboards import (
     get_main_keyboard,
     get_hello_world_keyboard,
     get_projects_keyboard,
+    get_help_keyboard,
 )
 from app.utils.text_formatters import escape_markdown_v2, sanitize_for_telegram_markdown
 
@@ -59,7 +60,12 @@ HELP_MESSAGE_TEXT = (
     "```"
 )
 
-
+# Define the confirmation text for the /reset command.
+RESET_CONFIRMATION_TEXT = (
+    "```python\n"
+    "INFO: История вашего диалога успешно очищена."
+    "\n```"
+)
 
 
 
@@ -88,7 +94,7 @@ async def handle_start(message: Message, bot: Bot):
 @router.message(Command("help"))
 async def handle_help(message: Message):
     """Handles the /help command by sending a static informational message."""
-    await message.answer(HELP_MESSAGE_TEXT)
+    await message.answer(HELP_MESSAGE_TEXT, reply_markup=get_help_keyboard())
 
 
 @router.message(Command("reset"))
@@ -99,11 +105,7 @@ async def handle_reset(message: Message):
     session_id = str(message.chat.id)
     memory = get_chat_memory(session_id=session_id)
     await memory.chat_memory.clear()
-    await message.answer(
-        "```\n"
-        "История вашего диалога была очищена. Можете начать общение с чистого листа."
-        "\n```"
-    )
+    await message.answer(RESET_CONFIRMATION_TEXT)
 
 
 async def process_query(
@@ -269,6 +271,19 @@ async def handle_main_menu_button(
                 bot=bot,
                 message_to_answer=query.message,
             )
+        case "restart_session":
+            # Re-trigger the /start handler to send a fresh welcome message.
+            await handle_start(query.message, bot)
+        case "reset_chat":
+            # Replicate the /reset logic for the callback button.
+            session_id = str(query.message.chat.id)
+            memory = get_chat_memory(session_id=session_id)
+            await memory.chat_memory.clear()
+            # Send a new message to confirm the action.
+            await query.message.answer(RESET_CONFIRMATION_TEXT)
+            # Edit the original /help message to remove the keyboard,
+            # preventing users from clicking buttons again.
+            await query.message.edit_reply_markup(reply_markup=None)
 
 
 @router.message(F.text)
