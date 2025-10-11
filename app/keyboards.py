@@ -41,7 +41,7 @@ def get_contact_keyboard() -> InlineKeyboardMarkup:
     to return to the main menu.
     """
     builder = InlineKeyboardBuilder()
-    builder.button(text="My GitHub", url="https://github.com/mynamemyway")
+    builder.button(text="GitHub", url="https://github.com/mynamemyway")
     builder.button(text="Telegram", url="https://t.me/mynamemyway")
     builder.button(text="Instagram", url="https://instagram.com/myname_myway")
     builder.button(text="⬅️ Назад", callback_data=MainMenuCallback(action="back_to_main"))
