@@ -156,6 +156,14 @@ async def handle_main_menu_button(
         return
 
     match callback_data.action:
+        case "about_me":
+            predefined_question = "Представься коротко"
+            await process_query(
+                chat_id=query.message.chat.id,
+                user_question=predefined_question,
+                bot=bot,
+                message_to_answer=query.message,
+            )
         case "skills":
             predefined_question = "Расскажи кратко о своих профессиональных навыках и технологическом стеке."
             await process_query(
