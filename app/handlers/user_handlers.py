@@ -6,7 +6,7 @@ from pathlib import Path
 from aiogram import Bot, F, Router
 from aiogram.filters import CommandStart
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, FSInputFile, Message
+from aiogram.types import CallbackQuery, FSInputFile, Message, InlineKeyboardMarkup
 from langchain_core.messages import AIMessage, HumanMessage
 
 from app.config import settings
@@ -123,6 +123,26 @@ async def process_query(
         await message_to_answer.answer(error_text)
 
 
+async def _edit_message(
+    message: Message, text: str, reply_markup: InlineKeyboardMarkup | None = None
+):
+    """
+    A helper function to edit a message, handling both text and caption cases.
+
+    This function checks if the message has a caption (i.e., it's a photo message)
+    or regular text and uses the appropriate edit method to avoid Telegram API errors.
+
+    Args:
+        message: The message object to edit.
+        text: The new text or caption for the message.
+        reply_markup: The new inline keyboard markup.
+    """
+    if message.caption:
+        await message.edit_caption(caption=text, reply_markup=reply_markup)
+    else:
+        await message.edit_text(text=text, reply_markup=reply_markup)
+
+
 @router.callback_query(MainMenuCallback.filter())
 async def handle_main_menu_button(
     query: CallbackQuery, callback_data: MainMenuCallback, bot: Bot
@@ -145,15 +165,18 @@ async def handle_main_menu_button(
                 message_to_answer=query.message,
             )
         case "projects":
-            await query.message.edit_text(
+            await _edit_message(
+                query.message,
                 "Выберите действие:", reply_markup=get_projects_keyboard()
             )
         case "contact":
-            await query.message.edit_text(
+            await _edit_message(
+                query.message,
                 "Выберите способ связи:", reply_markup=get_contact_keyboard()
             )
         case "back_to_main":
-            await query.message.edit_text(
+            await _edit_message(
+                query.message,
                 WELCOME_MESSAGE_TEXT, reply_markup=get_main_keyboard()
             )
         case "show_project_primenet":
