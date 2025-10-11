@@ -35,6 +35,18 @@ WELCOME_MESSAGE_TEXT = (
     "```"
 )
 
+# Define the static text for the "Hello world!" button.
+HELLO_WORLD_TEXT = (
+    "```python\n"
+    "`Hello world!`\n"
+    "Рад приветствовать вас в моём AI-портфолио.\n\n"
+    "Меня зовут Александр. Я — Python Backend Developer, специализирующийся на "
+    "проектировании и реализации асинхронных, масштабируемых систем и LLM-интеграций.\n\n"
+    "Я здесь, чтобы показать, какими навыками обладаю и как применил их в бизнес проектах."
+    "```"
+)
+
+
 
 @router.message(CommandStart())
 async def handle_start(message: Message, bot: Bot):
@@ -158,12 +170,11 @@ async def handle_main_menu_button(
 
     match callback_data.action:
         case "hello":
-            predefined_question = "Краткое приветствие"
-            await process_query(
-                chat_id=query.message.chat.id,
-                user_question=predefined_question,
-                bot=bot,
-                message_to_answer=query.message,
+            # Edit the message to show the static "Hello world!" text
+            # while keeping the main keyboard for further navigation.
+            await _edit_message(
+                query.message,
+                HELLO_WORLD_TEXT, reply_markup=get_main_keyboard()
             )
         case "skills":
             predefined_question = "Расскажи кратко о своих профессиональных навыках и технологическом стеке."
