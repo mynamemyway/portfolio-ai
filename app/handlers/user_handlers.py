@@ -12,7 +12,12 @@ from langchain_core.messages import AIMessage, HumanMessage
 from app.config import settings
 from app.core.chain import FallbackLoggingCallbackHandler, get_rag_chain
 from app.core.memory import get_chat_memory
-from app.keyboards import MainMenuCallback, get_contact_keyboard, get_main_keyboard
+from app.keyboards import (
+    MainMenuCallback,
+    get_contact_keyboard,
+    get_main_keyboard,
+    get_projects_keyboard,
+)
 from app.utils.text_formatters import escape_markdown_v2, sanitize_for_telegram_markdown
 
 # Create a new Router instance for user-facing handlers.
@@ -31,7 +36,7 @@ WELCOME_MESSAGE_TEXT = (
 
 
 @router.message(CommandStart())
-async def handle_start(message: Message):
+async def handle_start(message: Message, bot: Bot):
     """Handles the /start command, sending a welcome message with a photo (if configured) and an inline keyboard for primary actions."""
     main_keyboard = get_main_keyboard()
 
@@ -132,7 +137,7 @@ async def handle_main_menu_button(
 
     match callback_data.action:
         case "skills":
-            predefined_question = "Расскажи подробно о своих профессиональных навыках и технологическом стеке."
+            predefined_question = "Расскажи кратко о своих профессиональных навыках и технологическом стеке."
             await process_query(
                 chat_id=query.message.chat.id,
                 user_question=predefined_question,
@@ -140,17 +145,25 @@ async def handle_main_menu_button(
                 message_to_answer=query.message,
             )
         case "projects":
-            predefined_question = "Расскажи подробно о своих ключевых проектах."
+            await query.message.edit_text(
+                "Выберите действие:", reply_markup=get_projects_keyboard()
+            )
+        case "contact":
+            await query.message.edit_text(
+                "Выберите способ связи:", reply_markup=get_contact_keyboard()
+            )
+        case "back_to_main":
+            await query.message.edit_text(
+                WELCOME_MESSAGE_TEXT, reply_markup=get_main_keyboard()
+            )
+        case "show_project_primenet":
+            predefined_question = "Расскажи кратко о проекте PrimeNet."
             await process_query(
                 chat_id=query.message.chat.id,
                 user_question=predefined_question,
                 bot=bot,
                 message_to_answer=query.message,
             )
-        case "contact":
-            await query.message.edit_text("Выберите способ связи:", reply_markup=get_contact_keyboard())
-        case "back_to_main":
-            await query.message.edit_text(WELCOME_MESSAGE_TEXT, reply_markup=get_main_keyboard())
 
 
 @router.message(F.text)
