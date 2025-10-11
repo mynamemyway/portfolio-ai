@@ -284,12 +284,12 @@ async def handle_main_menu_button(
         case "projects":
             await _edit_message(
                 query.message,
-                "Select action:", reply_markup=get_projects_keyboard()
+                "", reply_markup=get_projects_keyboard()
             )
         case "contact":
             await _edit_message(
                 query.message,
-                "Select method:", reply_markup=get_contact_keyboard()
+                "", reply_markup=get_contact_keyboard()
             )
         case "back_to_main":
             await _edit_message(
