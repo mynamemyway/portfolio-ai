@@ -94,7 +94,23 @@ async def handle_start(message: Message, bot: Bot):
 @router.message(Command("help"))
 async def handle_help(message: Message):
     """Handles the /help command by sending a static informational message."""
-    await message.answer(HELP_MESSAGE_TEXT, reply_markup=get_help_keyboard())
+    help_keyboard = get_help_keyboard()
+
+    photo_path = settings.HELP_PHOTO_PATH
+    # Check if a help photo path is configured and the file exists.
+    if photo_path and Path(photo_path).is_file():
+        photo = FSInputFile(photo_path)
+        await message.answer_photo(
+            photo=photo, caption=HELP_MESSAGE_TEXT, reply_markup=help_keyboard
+        )
+    else:
+        # If the path is set but the file is not found, log a warning.
+        if photo_path:
+            logging.warning(
+                f"Help photo file not found at the specified path: {photo_path}"
+            )
+        # Fallback to sending a text message if no photo is available.
+        await message.answer(HELP_MESSAGE_TEXT, reply_markup=help_keyboard, parse_mode=None)
 
 
 @router.message(Command("reset"))
