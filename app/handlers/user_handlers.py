@@ -91,6 +91,21 @@ async def handle_help(message: Message):
     await message.answer(HELP_MESSAGE_TEXT)
 
 
+@router.message(Command("reset"))
+async def handle_reset(message: Message):
+    """
+    Handles the /reset command by clearing the user's chat history.
+    """
+    session_id = str(message.chat.id)
+    memory = get_chat_memory(session_id=session_id)
+    await memory.chat_memory.clear()
+    await message.answer(
+        "```\n"
+        "История вашего диалога была очищена. Можете начать общение с чистого листа."
+        "\n```"
+    )
+
+
 async def process_query(
     chat_id: int, user_question: str, bot: Bot, message_to_answer: Message
 ):
