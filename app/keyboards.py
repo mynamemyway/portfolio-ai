@@ -99,16 +99,14 @@ def get_help_keyboard() -> InlineKeyboardMarkup:
     clear their chat history, and contact you directly.
     """
     builder = InlineKeyboardBuilder()
-    # Callback buttons for bot actions
+    builder.button(text="Telegram", url="https://t.me/mynamemyway")
+    builder.button(
+        text="🗑️ Clear history", callback_data=MainMenuCallback(action="reset_chat")
+    )
     builder.button(
         text="🔄 Restart",
         callback_data=MainMenuCallback(action="restart_session"),
     )
-    builder.button(
-        text="🗑️ Clear history", callback_data=MainMenuCallback(action="reset_chat")
-    )
-    # URL buttons for direct contact
-    builder.button(text="Telegram", url="https://t.me/mynamemyway")
     builder.button(text="⬅️ Rerurn", callback_data=MainMenuCallback(action="back_to_main"))
     builder.adjust(2, 2)
     return builder.as_markup()
