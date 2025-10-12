@@ -328,7 +328,6 @@ async def handle_main_menu_button(
             await query.message.answer(RESET_CONFIRMATION_TEXT)
             # Edit the original /help message to remove the keyboard,
             # preventing users from clicking buttons again.
-            await query.message.edit_reply_markup(reply_markup=None)
 
 
 @router.message(F.text)
