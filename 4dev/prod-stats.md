@@ -78,4 +78,8 @@
 #### Шаг 2: Модификация `app/handlers/user_handlers.py`
 *   **Цель:** Добавить вызовы `log_query` для отслеживания нажатий на статические кнопки.
 *   **Логика:** В функции `handle_main_menu_button` в соответствующие `case` (`"projects"`, `"contact"`, `"hello"`, `"about_portfolio"`, и т.д.) добавить вызов `await log_query`. В `query_text` будет записываться понятный идентификатор действия, например, `CLICK: Projects Button`.
-2. Логирование всех кнопок
+
+#### Шаг 3: Логирование команд
+*   **Цель:** Добавить логирование для slash-команд (`/start`, `/help`, `/reset`) для полного охвата действий пользователя.
+*   **Файл:** `app/handlers/user_handlers.py`
+*   **Логика:** В начало каждого обработчика команд (`handle_start`, `handle_help`, `handle_reset`) добавить вызов `await log_query` с соответствующим идентификатором, например, `COMMAND: /start`.
