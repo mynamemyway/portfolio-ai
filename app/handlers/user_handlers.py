@@ -6,7 +6,7 @@ from pathlib import Path
 from aiogram import Bot, F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, FSInputFile, Message, InlineKeyboardMarkup, InputMediaPhoto
+from aiogram.types import CallbackQuery, FSInputFile, Message, InlineKeyboardMarkup, InputMediaPhoto, User
 from langchain_core.messages import AIMessage, HumanMessage
 
 from app.config import settings
@@ -126,7 +126,7 @@ async def handle_reset(message: Message):
 
 
 async def process_query(
-    chat_id: int, user_question: str, bot: Bot, message_to_answer: Message
+    chat_id: int, user_question: str, bot: Bot, message_to_answer: Message, user: User
 ):
     """A reusable function to process a user's query through the RAG chain.
 
@@ -134,7 +134,8 @@ async def process_query(
         chat_id: The user's chat ID for session management.
         user_question: The question to be processed.
         bot: The Bot instance to send 'typing' action.
-        message_to_answer: The Message object to reply to.
+        message_to_answer: The Message object to reply to or edit.
+        user: The User object of the person who initiated the query.
     """
     # 1. Provide user feedback that the request is being processed
     await bot.send_chat_action(chat_id=chat_id, action="typing")
@@ -186,7 +187,6 @@ async def process_query(
                 await message_to_answer.answer(ai_response, parse_mode=None)
 
         # 5. Log the query and response to the statistics database
-        user = message_to_answer.from_user
         await log_query(
             user_id=user.id,
             username=user.username,
@@ -306,6 +306,7 @@ async def handle_main_menu_button(
                 user_question=predefined_question,
                 bot=bot,
                 message_to_answer=query.message,
+                user=query.from_user,
             )
         case "projects":
             await _edit_message(
@@ -331,6 +332,7 @@ async def handle_main_menu_button(
                 user_question=predefined_question,
                 bot=bot,
                 message_to_answer=query.message,
+                user=query.from_user,
             )
         case "restart_session":
             # Re-trigger the /start handler to send a fresh welcome message.
@@ -359,4 +361,5 @@ async def handle_message(message: Message, bot: Bot):
         user_question=message.text,
         bot=bot,
         message_to_answer=message,
+        user=message.from_user,
     )
