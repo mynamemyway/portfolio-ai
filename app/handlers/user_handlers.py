@@ -274,7 +274,7 @@ async def handle_main_menu_button(
                     # Re-raise any other TelegramBadRequest errors for debugging.
                     raise
         case "skills":
-            predefined_question = "Составь только краткий список своих софтскилов и хардскилов, исключая конкретную информацию о проектах."
+            predefined_question = "Составь только структурированный список своих хардскилов и софтскилов, исключая конкретную информацию о проектах."
             await process_query(
                 chat_id=query.message.chat.id,
                 user_question=predefined_question,
