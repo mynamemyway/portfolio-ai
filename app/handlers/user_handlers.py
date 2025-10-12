@@ -12,6 +12,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from app.config import settings
 from app.core.chain import FallbackLoggingCallbackHandler, get_rag_chain
 from app.core.memory import get_chat_memory
+from app.core.stats import log_query
 from app.keyboards import (
     MainMenuCallback,
     get_contact_keyboard,
@@ -143,18 +144,21 @@ async def process_query(
     # Create an instance of the callback handler to log fallbacks
     fallback_logger = FallbackLoggingCallbackHandler()
     try:
-        ai_response = await rag_chain.ainvoke(
+        result = await rag_chain.ainvoke(
             {"session_id": str(chat_id), "question": user_question},
             # Pass the callback handler to the chain invocation
             config={"callbacks": [fallback_logger]},
         )
+        ai_response = result["answer"]
+        retrieved_context = result["context"]
 
         # 4. Send the generated response based on the configuration setting
         if settings.RESPONSE_AS_CODE_BLOCK:
             # Sanitize the response to prevent breaking the code block and wrap it.
             safe_response = ai_response.replace("```", "`` ` ``")
             formatted_response = f"```\n{safe_response}\n```"
-            await message_to_answer.answer(formatted_response)
+            # Send as a code block, which doesn't need Markdown parsing.
+            await message_to_answer.answer(formatted_response, parse_mode=None)
         elif settings.SANITIZE_RESPONSE:
             # Proactively sanitize the response to make it compatible with MarkdownV2.
             sanitized_response = sanitize_for_telegram_markdown(ai_response)
@@ -181,7 +185,19 @@ async def process_query(
                 )
                 await message_to_answer.answer(ai_response, parse_mode=None)
 
-        # 5. Manually save the context to the chat history
+        # 5. Log the query and response to the statistics database
+        user = message_to_answer.from_user
+        await log_query(
+            user_id=user.id,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            query_text=user_question,
+            retrieved_context=retrieved_context,
+            llm_response=ai_response,
+        )
+
+        # 6. Manually save the context to the chat history
         # The RAG chain loads history, but saving is handled here.
         memory = get_chat_memory(session_id=str(chat_id))
         await memory.chat_memory.add_messages(
