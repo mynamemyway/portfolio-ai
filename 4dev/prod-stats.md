@@ -22,6 +22,8 @@
         *   `id`: `INTEGER PRIMARY KEY AUTOINCREMENT`
         *   `user_id`: `INTEGER NOT NULL`
         *   `username`: `TEXT`
+        *   `first_name`: `TEXT`
+        *   `last_name`: `TEXT`
         *   `query_text`: `TEXT NOT NULL`
         *   `retrieved_context`: `TEXT`
         *   `llm_response`: `TEXT`
@@ -48,7 +50,7 @@
 *   **Цель:** Встроить вызов функции логирования в основной обработчик запросов.
 *   **Файл:** `app/handlers/user_handlers.py`
 *   **Функция / Сигнатура:** `process_query(...)`
-*   **Логика:** После успешного выполнения `rag_chain.ainvoke()` и получения ответа с контекстом, добавить вызов `await log_query(...)` и передать в него все необходимые данные.
+*   **Логика:** После успешного выполнения `rag_chain.ainvoke()` и получения ответа с контекстом, добавить вызов `await log_query(...)` и передать в него все необходимые данные, включая `first_name` и `last_name` из объекта `message.from_user`.
 
 ---
 
