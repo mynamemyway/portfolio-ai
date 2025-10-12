@@ -22,3 +22,7 @@ aiosqlite==0.20.0
 
 # HTTP Client with retry capabilities
 httpx==0.28.1
+
+# Testing Framework
+pytest==8.4.0
+pytest-asyncio==0.23.8
