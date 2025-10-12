@@ -264,6 +264,13 @@ async def handle_main_menu_button(
 
     match callback_data.action:
         case "hello":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Hello Button",
+            )
             try:
                 # Edit the message to show the static "Hello world!" text and
                 # switch to the alternative keyboard with a "back" button.
@@ -281,6 +288,13 @@ async def handle_main_menu_button(
                     # Re-raise any other TelegramBadRequest errors for debugging.
                     raise
         case "about_portfolio":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Back to Portfolio AI Button",
+            )
             try:
                 # This handles the "back" button from the "Hello world!" view,
                 # returning the user to the initial welcome message and main keyboard.
@@ -309,16 +323,37 @@ async def handle_main_menu_button(
                 user=query.from_user,
             )
         case "projects":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Projects Button",
+            )
             await _edit_message(
                 query.message,
                 "", reply_markup=get_projects_keyboard()
             )
         case "contact":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Contact Button",
+            )
             await _edit_message(
                 query.message,
                 "", reply_markup=get_contact_keyboard()
             )
         case "back_to_main":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Back to Main Menu Button",
+            )
             await _edit_message(
                 query.message,
                 WELCOME_MESSAGE_TEXT,
@@ -335,10 +370,24 @@ async def handle_main_menu_button(
                 user=query.from_user,
             )
         case "restart_session":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Restart Session Button",
+            )
             # Re-trigger the /start handler to send a fresh welcome message.
             await handle_start(query.message, bot)
         case "reset_chat":
             # Replicate the /reset logic for the callback button.
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Reset Chat Button",
+            )
             session_id = str(query.message.chat.id)
             memory = get_chat_memory(session_id=session_id)
             await memory.chat_memory.clear()
