@@ -96,7 +96,7 @@ class SQLiteChatMessageHistory(BaseChatMessageHistory):
         """
         await self._create_table_if_not_exists()
         # Serialize the LangChain message object to a JSON string
-        serialized_message = json.dumps(message_to_dict(message))
+        serialized_message = json.dumps(message_to_dict(message), ensure_ascii=False)
 
         async with aiosqlite.connect(self.db_path) as db:
             await db.execute(
@@ -121,7 +121,8 @@ class SQLiteChatMessageHistory(BaseChatMessageHistory):
 
         # Serialize all messages and prepare them for batch insertion
         serialized_messages = [
-            (self.session_id, json.dumps(message_to_dict(msg))) for msg in messages
+            (self.session_id, json.dumps(message_to_dict(msg), ensure_ascii=False))
+            for msg in messages
         ]
 
         async with aiosqlite.connect(self.db_path) as db:
