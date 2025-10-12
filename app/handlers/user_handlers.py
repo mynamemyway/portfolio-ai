@@ -63,7 +63,7 @@ HELP_MESSAGE_TEXT = (
 # Define the confirmation text for the /reset command.
 RESET_CONFIRMATION_TEXT = (
     "```python\n"
-    "INFO: История вашего диалога успешно очищена."
+    "INFO: History successfully cleared"
     "\n```"
 )
 
@@ -155,21 +155,31 @@ async def process_query(
             safe_response = ai_response.replace("```", "`` ` ``")
             formatted_response = f"```\n{safe_response}\n```"
             await message_to_answer.answer(formatted_response)
-        else:
+        elif settings.SANITIZE_RESPONSE:
             # Proactively sanitize the response to make it compatible with MarkdownV2.
             sanitized_response = sanitize_for_telegram_markdown(ai_response)
             try:
                 # Attempt to send the sanitized message.
                 await message_to_answer.answer(sanitized_response)
             except TelegramBadRequest as e:
-                # If even the sanitized version fails, log the error and fall back to full escaping.
+                # If the sanitized version fails, log the error and fall back to sending without parsing.
                 logging.error(
-                    f"Sanitized message failed to send. Error: {e}. Falling back to full escape."
+                    f"Sanitized message failed to send. Error: {e}. Falling back to parse_mode=None."
                 )
                 logging.error(f"Original AI response: {ai_response}")
                 logging.error(f"Sanitized response that failed: {sanitized_response}")
-                escaped_response = escape_markdown_v2(ai_response)
-                await message_to_answer.answer(escaped_response)
+                # Send the original, unescaped response without any parsing.
+                await message_to_answer.answer(ai_response, parse_mode=None)
+        else:
+            # If sanitization is disabled, try sending with default MarkdownV2,
+            # then fall back to no parsing on error.
+            try:
+                await message_to_answer.answer(ai_response)
+            except TelegramBadRequest as e:
+                logging.warning(
+                    f"MarkdownV2 parsing failed: {e}. Sending with parse_mode=None."
+                )
+                await message_to_answer.answer(ai_response, parse_mode=None)
 
         # 5. Manually save the context to the chat history
         # The RAG chain loads history, but saving is handled here.
@@ -274,7 +284,7 @@ async def handle_main_menu_button(
                     # Re-raise any other TelegramBadRequest errors for debugging.
                     raise
         case "skills":
-            predefined_question = "Расскажи кратко о своих профессиональных навыках и технологическом стеке."
+            predefined_question = "Составь только структурированный список своих хардскилов и софтскилов, исключая конкретную информацию о проектах."
             await process_query(
                 chat_id=query.message.chat.id,
                 user_question=predefined_question,
@@ -318,7 +328,6 @@ async def handle_main_menu_button(
             await query.message.answer(RESET_CONFIRMATION_TEXT)
             # Edit the original /help message to remove the keyboard,
             # preventing users from clicking buttons again.
-            await query.message.edit_reply_markup(reply_markup=None)
 
 
 @router.message(F.text)

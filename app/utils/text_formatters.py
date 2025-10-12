@@ -62,7 +62,7 @@ def sanitize_for_telegram_markdown(text: str) -> str:
     sanitized_text = '\n'.join(processed_lines)
 
     # Final escape for all special characters not part of intended formatting.
-    escape_chars = r"(?<!\\)([\[\]\(\)~`>+\-=|{}.!])"
+    escape_chars = r"(?<!\\)([_\[\]\(\)~>+\-=|{}.!])"
     sanitized_text = re.sub(escape_chars, r'\\\1', sanitized_text)
 
     return sanitized_text
