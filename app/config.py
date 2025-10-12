@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # The specific chat model to use from OpenRouter
     # Best="google/gemini-2.0-flash-exp:free"
     # Second="mistralai/mistral-medium-3.1"
-    OPENROUTER_CHAT_MODEL: str = "mistralai/mistral-medium-3.1"
+    OPENROUTER_CHAT_MODEL: str = "mistralai/mistral-small"
     
     # The fallback model to use if the primary model fails
     OPENROUTER_FALLBACK_MODEL: str = "mistralai/mistral-small"
@@ -39,6 +39,9 @@ class Settings(BaseSettings):
 
     # Determines if the bot's response should be wrapped in a markdown code block
     RESPONSE_AS_CODE_BLOCK: bool = False
+
+    # Determines if the bot's response should be sanitized for MarkdownV2.
+    SANITIZE_RESPONSE: bool = True
 
     # (Optional) Path to the welcome photo for the /start command
     WELCOME_PHOTO_PATH: str | None = None
