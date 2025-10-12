@@ -63,7 +63,7 @@ HELP_MESSAGE_TEXT = (
 # Define the confirmation text for the /reset command.
 RESET_CONFIRMATION_TEXT = (
     "```python\n"
-    "INFO: История вашего диалога успешно очищена."
+    "INFO: History successfully cleared"
     "\n```"
 )
 
@@ -274,7 +274,7 @@ async def handle_main_menu_button(
                     # Re-raise any other TelegramBadRequest errors for debugging.
                     raise
         case "skills":
-            predefined_question = "Расскажи кратко о своих профессиональных навыках и технологическом стеке."
+            predefined_question = "Составь только краткий список своих софтскилов и хардскилов, исключая конкретную информацию о проектах."
             await process_query(
                 chat_id=query.message.chat.id,
                 user_question=predefined_question,
