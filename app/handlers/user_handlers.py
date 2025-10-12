@@ -73,6 +73,13 @@ RESET_CONFIRMATION_TEXT = (
 @router.message(CommandStart())
 async def handle_start(message: Message, bot: Bot):
     """Handles the /start command, sending a welcome message with a photo (if configured) and an inline keyboard for primary actions."""
+    await log_query(
+        user_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+        last_name=message.from_user.last_name,
+        query_text="COMMAND: /start",
+    )
     main_keyboard = get_main_keyboard()
 
     photo_path = settings.WELCOME_PHOTO_PATH
@@ -95,6 +102,13 @@ async def handle_start(message: Message, bot: Bot):
 @router.message(Command("help"))
 async def handle_help(message: Message):
     """Handles the /help command by sending a static informational message."""
+    await log_query(
+        user_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+        last_name=message.from_user.last_name,
+        query_text="COMMAND: /help",
+    )
     help_keyboard = get_help_keyboard()
 
     photo_path = settings.HELP_PHOTO_PATH
@@ -119,6 +133,13 @@ async def handle_reset(message: Message):
     """
     Handles the /reset command by clearing the user's chat history.
     """
+    await log_query(
+        user_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+        last_name=message.from_user.last_name,
+        query_text="COMMAND: /reset",
+    )
     session_id = str(message.chat.id)
     memory = get_chat_memory(session_id=session_id)
     await memory.chat_memory.clear()
