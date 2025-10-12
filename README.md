@@ -1,8 +1,8 @@
-# Portfolio AI v1.1.0 🤖
+# Portfolio AI v1.2.0 🤖
 
 <p align="left">
   <img src="https://img.shields.io/badge/Status-Active-green" alt="Status">
-  <img src="https://img.shields.io/badge/Version-1.1.0-blueviolet" alt="Version">
+  <img src="https://img.shields.io/badge/Version-1.2.0-blueviolet" alt="Version">
   <img src="https://img.shields.io/badge/Build-Passing-brightgreen" alt="Build">
 </p>
 
