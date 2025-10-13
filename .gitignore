@@ -9,6 +9,13 @@ chroma_db/
 app/knowledge_base/*
 !app/knowledge_base/.gitkeep
 
+# Ignore all in assets
+assets/*
+
+# But non ignore
+!assets/.gitkeep
+
+
 # Ignore local databases directory
 app/db/
 
