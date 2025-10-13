@@ -353,7 +353,7 @@ async def handle_main_menu_button(
                 last_name=query.from_user.last_name,
                 query_text="CLICK: Skills Button",
             )
-            await _edit_message(query.message, "Выберите категорию навыков:", reply_markup=get_skills_keyboard()
+            await _edit_message(query.message, "", reply_markup=get_skills_keyboard()
             )
         case "projects":
             await log_query(
