@@ -10,9 +10,6 @@ from langchain_core.documents import Document
 # Import the private function we want to test
 from app.core.rag import _load_and_split_documents, ApiServiceEmbeddings
 
-# Mark all tests in this file as asyncio, as we are testing async functions
-pytestmark = pytest.mark.asyncio
-
 @pytest.fixture
 def temp_knowledge_base(tmp_path, monkeypatch):
     """
@@ -51,6 +48,7 @@ def test_load_and_split_documents(temp_knowledge_base):
     assert chunked_documents[0].page_content.startswith("This is the first sentence.")
 
 
+@pytest.mark.asyncio
 async def test_api_service_embeddings_success():
     """
     Tests the ApiServiceEmbeddings class for successful API calls.
@@ -78,6 +76,7 @@ async def test_api_service_embeddings_success():
     assert result == [[0.1, 0.2], [0.3, 0.4]]
 
 
+@pytest.mark.asyncio
 async def test_api_service_embeddings_http_error():
     """
     Tests that ApiServiceEmbeddings correctly raises an HTTPStatusError
