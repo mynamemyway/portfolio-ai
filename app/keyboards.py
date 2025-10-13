@@ -26,11 +26,12 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
     """
     builder = InlineKeyboardBuilder()
     builder.button(text="➡️ Hello world!", callback_data=MainMenuCallback(action="hello"))
+    builder.button(text="👋 AI about me", callback_data=MainMenuCallback(action="about_me"))
     builder.button(text="Skills", callback_data=MainMenuCallback(action="skills"))
     builder.button(text="Projects", callback_data=MainMenuCallback(action="projects"))
     builder.button(text="Contacts", callback_data=MainMenuCallback(action="contact"))
-    # Arrange the buttons: 1 button in the first row, 3 in the second.
-    builder.adjust(1, 3)
+    # Arrange the buttons: 1 button in the first row, 2 in the second, 2 in the third.
+    builder.adjust(2, 3)
     return builder.as_markup()
 
 
@@ -44,13 +45,32 @@ def get_hello_world_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     # This button returns the user to the initial welcome message.
     builder.button(
-        text="⬅️ about Portfolio AI", callback_data=MainMenuCallback(action="about_portfolio")
+        text="⬅️ About bot", callback_data=MainMenuCallback(action="about_portfolio")
     )
+    builder.button(text="👋 AI about me", callback_data=MainMenuCallback(action="about_me"))
     builder.button(text="Skills", callback_data=MainMenuCallback(action="skills"))
     builder.button(text="Projects", callback_data=MainMenuCallback(action="projects"))
     builder.button(text="Contacts", callback_data=MainMenuCallback(action="contact"))
     # The layout is identical to the main keyboard for consistency.
-    builder.adjust(1, 3)
+    builder.adjust(2, 3)
+    return builder.as_markup()
+
+
+def get_skills_keyboard() -> InlineKeyboardMarkup:
+    """
+    Builds and returns the skills submenu inline keyboard.
+
+    This keyboard allows the user to choose between viewing hard skills or soft skills.
+    """
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="Hard skills", callback_data=MainMenuCallback(action="hard_skills")
+    )
+    builder.button(
+        text="Soft skills", callback_data=MainMenuCallback(action="soft_skills")
+    )
+    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
+    builder.adjust(2, 1)
     return builder.as_markup()
 
 
@@ -84,10 +104,14 @@ def get_projects_keyboard() -> InlineKeyboardMarkup:
         callback_data=MainMenuCallback(action="show_project_primenet"),
     )
     builder.button(text="PrimeNetworking on Git", url="https://github.com/mynamemyway/prime-net-docs")
+    builder.button(
+        text="Tell about Portfolio AI",
+        callback_data=MainMenuCallback(action="show_project_portfolio_ai"),
+    )
     builder.button(text="Portfolio AI on Git", url="https://github.com/mynamemyway/portfolio-ai")
     builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
     # Arrange the buttons: each on a new line for better readability.
-    builder.adjust(1, 1, 1, 1)
+    builder.adjust(1, 1, 1, 1, 1)
     return builder.as_markup()
 
 

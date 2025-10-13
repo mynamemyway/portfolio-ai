@@ -156,12 +156,17 @@ async def test_static_callback_handler(
     assert log_args.kwargs["query_text"] == "CLICK: Projects Button"
 
 
-@patch("app.handlers.user_handlers.process_query")
-async def test_rag_callback_handler(mock_process_query, mock_bot, mock_callback_query):
-    """Тестирует обработчик callback-кнопки, вызывающей RAG (например, 'skills')."""
+@patch("app.handlers.user_handlers.log_query")
+@patch("app.handlers.user_handlers._edit_message")
+@patch("app.handlers.user_handlers.get_skills_keyboard")
+async def test_skills_callback_handler_opens_submenu(
+    mock_get_skills_keyboard, mock_edit_message, mock_log_query, mock_bot, mock_callback_query
+):
+    """Тестирует, что обработчик для 'skills' открывает подменю, а не вызывает RAG."""
     # Настройка моков
     callback_data = MainMenuCallback(action="skills")
-    mock_process_query.return_value = None
+    mock_keyboard = MagicMock(spec=InlineKeyboardMarkup)
+    mock_get_skills_keyboard.return_value = mock_keyboard
 
     # Вызов обработчика
     await user_handlers.handle_main_menu_button(
@@ -170,9 +175,41 @@ async def test_rag_callback_handler(mock_process_query, mock_bot, mock_callback_
 
     # Проверки
     mock_callback_query.answer.assert_awaited_once()
+    mock_edit_message.assert_called_once()
+    call_args = mock_edit_message.call_args_list[0]
+    assert call_args.kwargs["reply_markup"] == mock_keyboard
+
+    mock_log_query.assert_called_once()
+    log_args = mock_log_query.call_args
+    assert log_args.kwargs["query_text"] == "CLICK: Skills Button"
+
+
+@patch("app.handlers.user_handlers.process_query")
+@pytest.mark.parametrize(
+    "action, expected_question_part",
+    [
+        ("about_me", "Представься локанично как человек"),
+        ("hard_skills", "список своих хардскилов"),
+        ("soft_skills", "список своих софтскилов"),
+        ("show_project_portfolio_ai", "о работе Portfolio AI бота"),
+    ],
+)
+async def test_new_rag_callback_handlers(
+    mock_process_query, action, expected_question_part, mock_bot, mock_callback_query
+):
+    """Тестирует новые обработчики callback-кнопок, вызывающие RAG."""
+    # Настройка моков
+    callback_data = MainMenuCallback(action=action)
+    mock_process_query.return_value = None
+
+    # Вызов обработчика
+    await user_handlers.handle_main_menu_button(mock_callback_query, callback_data, mock_bot)
+
+    # Проверки
+    mock_callback_query.answer.assert_awaited_once()
     mock_process_query.assert_called_once()
     process_query_args = mock_process_query.call_args
-    assert "Составь только структурированный список" in process_query_args.kwargs["user_question"]
+    assert expected_question_part in process_query_args.kwargs["user_question"]
     assert process_query_args.kwargs["chat_id"] == mock_callback_query.message.chat.id
     assert process_query_args.kwargs["message_to_answer"] == mock_callback_query.message
     assert process_query_args.kwargs["user"] == mock_callback_query.from_user

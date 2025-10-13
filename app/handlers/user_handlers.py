@@ -20,6 +20,7 @@ from app.keyboards import (
     get_hello_world_keyboard,
     get_projects_keyboard,
     get_help_keyboard,
+    get_skills_keyboard,
 )
 from app.utils.text_formatters import escape_markdown_v2, sanitize_for_telegram_markdown
 
@@ -30,7 +31,7 @@ router = Router()
 WELCOME_MESSAGE_TEXT = (
     "```python\n"
     "Инициализация...\n"
-    "Протокол Portfolio AI ver 1.3.0 активирован.\n\n"
+    "Протокол Portfolio AI ver 1.4.0 активирован.\n\n"
     "Я — ваш персональный AI-интерфейс к опыту Python-разработчика Александра. "
     "Мои базы данных содержат полные стеки, архитектурные решения и детали реализации проектов.\n\n"
     "Начните с команды 'Hello world!' или задайте свой вопрос,чтобы начать извлечение данных."
@@ -43,7 +44,8 @@ HELLO_WORLD_TEXT = (
     "`Hello world!`\n"
     "Рад приветствовать вас в моём AI-портфолио.\n\n"
     "Меня зовут Александр, я — Python Backend Developer. Специализируюсь на "
-    "проектировании и реализации асинхронных, масштабируемых систем и LLM-интеграций.\n\n"
+    "автоматизации бизнес процессов, проектировании асинхронных систем, "
+    "LLM-интеграций и работе с данными.\n\n"
     "Я здесь, чтобы показать, какими навыками обладаю и как применил их в бизнес проектах."
     "```"
 )
@@ -334,14 +336,24 @@ async def handle_main_menu_button(
                 else:
                     # Re-raise any other TelegramBadRequest errors for debugging.
                     raise
-        case "skills":
-            predefined_question = "Составь только структурированный список своих хардскилов и софтскилов, исключая конкретную информацию о проектах."
+        case "about_me":
+            predefined_question = "Представься локанично как человек"
             await process_query(
                 chat_id=query.message.chat.id,
                 user_question=predefined_question,
                 bot=bot,
                 message_to_answer=query.message,
                 user=query.from_user,
+            )
+        case "skills":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Skills Button",
+            )
+            await _edit_message(query.message, "", reply_markup=get_skills_keyboard()
             )
         case "projects":
             await log_query(
@@ -382,7 +394,34 @@ async def handle_main_menu_button(
                 photo_path=settings.WELCOME_PHOTO_PATH,
             )
         case "show_project_primenet":
-            predefined_question = "Расскажи кратко о проекте PrimeNet."
+            predefined_question = "Расскажи кратко о проекте PrimeNetworking."
+            await process_query(
+                chat_id=query.message.chat.id,
+                user_question=predefined_question,
+                bot=bot,
+                message_to_answer=query.message,
+                user=query.from_user,
+            )
+        case "show_project_portfolio_ai":
+            predefined_question = "Расскажи кратко о работе Portfolio AI бота."
+            await process_query(
+                chat_id=query.message.chat.id,
+                user_question=predefined_question,
+                bot=bot,
+                message_to_answer=query.message,
+                user=query.from_user,
+            )
+        case "hard_skills":
+            predefined_question = "Составь только структурированный список своих хардскилов, исключая конкретную информацию о проектах."
+            await process_query(
+                chat_id=query.message.chat.id,
+                user_question=predefined_question,
+                bot=bot,
+                message_to_answer=query.message,
+                user=query.from_user,
+            )
+        case "soft_skills":
+            predefined_question = "Составь только структурированный список своих софтскилов, исключая конкретную информацию о проектах."
             await process_query(
                 chat_id=query.message.chat.id,
                 user_question=predefined_question,

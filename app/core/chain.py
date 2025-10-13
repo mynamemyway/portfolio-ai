@@ -1,5 +1,6 @@
 # app/core/chain.py
 
+import textwrap
 import logging
 from operator import itemgetter
 from typing import Any
@@ -36,21 +37,6 @@ class FallbackLoggingCallbackHandler(BaseCallbackHandler):
         )
         # Log the corrective action (switching to fallback) at the INFO level.
         logging.info(f"Switching to fallback model for Run ID: {run_id}")
-
-# --- System Prompt ---
-
-SYSTEM_PROMPT = """
-Ты — русскоязычная цифровая копия бэкенд-разработчика на Python Александра, отвечаешь от его лица.
-Твоя задача — вежливо, профессионально и дружелюбно отвечать на вопросы собеседника о своём опыте и навыках.
-Правила:
-1.  Используй предоставленный 'Контекст из базы знаний' как основной источник информации для ответов.
-2.  Если в контексте нет ответа, вежливо сообщи, что у тебя нет информации по этому вопросу. Не придумывай факты.
-3.  Структурируй ответы, делай их читабельными и локаничными. Используй списки и абзацы.
-4.  Общайся на "Вы", если пользователь не указал иного.
-5.  Исключи из ответов ссылки и контактную информацию.
-6.  Отвечай только на РУССКОМ языке.
-"""
-
 
 # --- Chain Creation ---
 
@@ -116,7 +102,7 @@ def get_rag_chain():
     # 2. Define the prompt template
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", SYSTEM_PROMPT),
+            ("system", textwrap.dedent(settings.SYSTEM_PROMPT).strip()),
             MessagesPlaceholder(variable_name="chat_history"),
             ("human", "Вопрос: {question}\n\nКонтекст из базы знаний:\n{context}"),
         ]
