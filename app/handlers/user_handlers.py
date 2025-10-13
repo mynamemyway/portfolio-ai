@@ -337,7 +337,7 @@ async def handle_main_menu_button(
                     # Re-raise any other TelegramBadRequest errors for debugging.
                     raise
         case "about_me":
-            predefined_question = "Представься кратко"
+            predefined_question = "Представься кратко как человек без списков и характеристик"
             await process_query(
                 chat_id=query.message.chat.id,
                 user_question=predefined_question,
