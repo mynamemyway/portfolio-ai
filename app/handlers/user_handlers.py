@@ -382,7 +382,7 @@ async def handle_main_menu_button(
                 photo_path=settings.WELCOME_PHOTO_PATH,
             )
         case "show_project_primenet":
-            predefined_question = "Расскажи кратко о проекте PrimeNet."
+            predefined_question = "Расскажи кратко о проекте PrimeNetworking."
             await process_query(
                 chat_id=query.message.chat.id,
                 user_question=predefined_question,
