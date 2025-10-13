@@ -34,8 +34,8 @@ def test_get_hello_world_keyboard():
 
     buttons = {btn.text: btn for row in keyboard.inline_keyboard for btn in row}
 
-    assert "⬅️ about Portfolio AI" in buttons
-    assert buttons["⬅️ about Portfolio AI"].callback_data == MainMenuCallback(
+    assert "⬅️ About bot" in buttons
+    assert buttons["⬅️ About bot"].callback_data == MainMenuCallback(
         action="about_portfolio"
     ).pack()
 
