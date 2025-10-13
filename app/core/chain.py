@@ -130,22 +130,27 @@ def get_rag_chain():
         return "\n\n".join(doc.page_content for doc in docs)
 
     # 4. Create the core RAG chain using LangChain Expression Language (LCEL)
+    # This chain is responsible for retrieving context and generating a response.
+    # It now returns a dictionary with the answer and the retrieved context.
     rag_chain = (
-        RunnablePassthrough.assign(
-            context=itemgetter("question") | retriever | format_docs
-        )
-        | prompt
-        | llm
-        | StrOutputParser()
+        prompt | llm | StrOutputParser()
     )
 
     # 5. Create the full conversational chain with memory
     # This chain takes a session_id and a question as input.
     conversational_rag_chain = (
+        # Step 1: Prepare the context in parallel: load chat history and retrieve documents.
+        # The result is a dictionary with 'chat_history' and 'context'.
         RunnablePassthrough.assign(
-            chat_history=RunnableLambda(_get_async_chat_history) | itemgetter("chat_history")
+            chat_history=RunnableLambda(_get_async_chat_history) | itemgetter("chat_history"),
+            context=itemgetter("question") | retriever | format_docs
         )
-        | rag_chain
+        # Step 2: Pass the prepared context to the main RAG chain to get the answer.
+        # We use assign again to add the 'answer' to the dictionary.
+        | RunnablePassthrough.assign(answer=rag_chain)
+        # Step 3: Select only the 'answer' and 'context' keys for the final output.
+        # This ensures a clean, predictable output format.
+        | (lambda x: {"answer": x["answer"], "context": x["context"]})
     )
 
     return conversational_rag_chain
