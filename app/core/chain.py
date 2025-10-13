@@ -40,17 +40,15 @@ class FallbackLoggingCallbackHandler(BaseCallbackHandler):
 # --- System Prompt ---
 
 SYSTEM_PROMPT = """
-Твоя роль — **Личный Карьерный Агент** Александра, созданный для максимально эффективной презентации его навыков и отвечающий от его лица.
-Твоя задача — вести диалог дружелюбно, профессионально и помогать собеседнику найти наиболее важную информацию.
-ПРАВИЛА И СТРАТЕГИЯ:
-1.  **Приоритет Контекста:** ИСПОЛЬЗУЙ предоставленный 'Контекст из базы знаний' как единственный источник.
-2.  **Вовлечение:** После того как ты дал полный ответ, всегда задавай **открытый, наводящий вопрос**, который продвинет диалог к следующей сильной стороне Александра. Пример: "Теперь, когда мы обсудили RAG, вас интересует, как именно решена проблема асинхронности в aiogram, или, может быть, архитектура базы данных PrimeNetworking?"
-3.  **Акцент на Hard Skills:** При ответе, делай упор на **технические детали**, объясняя *почему* была выбрана та или иная технология (например, "FastAPI был выбран за его асинхронную природу").
-4.  **Управление Неизвестным:** Если информации нет, вежливо сообщи об этом, и сразу **предложи выбор из 2-3 тем**, которые есть в базе и могут быть полезны собеседнику.
-5.  **Форматирование:** Используй списки и абзацы.
-6.  **Тон:** Дружелюбно-профессиональный, готовый помочь. Общайся на "Вы".
-7.  **Исключения:** Исключи ссылки, контакты.
-8.  **Язык:** Отвечай только на РУССКОМ языке.
+Ты — русскоязычная цифровая копия бэкенд-разработчика на Python Александра, отвечаешь от его лица.
+Твоя задача — вежливо, профессионально и дружелюбно отвечать на вопросы собеседника о своём опыте и навыках.
+Правила:
+1.  Используй предоставленный 'Контекст из базы знаний' как основной источник информации для ответов.
+2.  Если в контексте нет ответа, вежливо сообщи, что у тебя нет информации по этому вопросу. Не придумывай факты.
+3.  Структурируй ответы, делай их читабельными и локаничными. Используй списки и абзацы.
+4.  Общайся на "Вы", если пользователь не указал иного.
+5.  Исключи из ответов ссылки и контактную информацию.
+6.  Отвечай только на РУССКОМ языке.
 """
 
 
@@ -130,22 +128,27 @@ def get_rag_chain():
         return "\n\n".join(doc.page_content for doc in docs)
 
     # 4. Create the core RAG chain using LangChain Expression Language (LCEL)
+    # This chain is responsible for retrieving context and generating a response.
+    # It now returns a dictionary with the answer and the retrieved context.
     rag_chain = (
-        RunnablePassthrough.assign(
-            context=itemgetter("question") | retriever | format_docs
-        )
-        | prompt
-        | llm
-        | StrOutputParser()
+        prompt | llm | StrOutputParser()
     )
 
     # 5. Create the full conversational chain with memory
     # This chain takes a session_id and a question as input.
     conversational_rag_chain = (
+        # Step 1: Prepare the context in parallel: load chat history and retrieve documents.
+        # The result is a dictionary with 'chat_history' and 'context'.
         RunnablePassthrough.assign(
-            chat_history=RunnableLambda(_get_async_chat_history) | itemgetter("chat_history")
+            chat_history=RunnableLambda(_get_async_chat_history) | itemgetter("chat_history"),
+            context=itemgetter("question") | retriever | format_docs
         )
-        | rag_chain
+        # Step 2: Pass the prepared context to the main RAG chain to get the answer.
+        # We use assign again to add the 'answer' to the dictionary.
+        | RunnablePassthrough.assign(answer=rag_chain)
+        # Step 3: Select only the 'answer' and 'context' keys for the final output.
+        # This ensures a clean, predictable output format.
+        | (lambda x: {"answer": x["answer"], "context": x["context"]})
     )
 
     return conversational_rag_chain

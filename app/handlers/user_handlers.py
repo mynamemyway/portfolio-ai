@@ -6,12 +6,13 @@ from pathlib import Path
 from aiogram import Bot, F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, FSInputFile, Message, InlineKeyboardMarkup, InputMediaPhoto
+from aiogram.types import CallbackQuery, FSInputFile, Message, InlineKeyboardMarkup, InputMediaPhoto, User
 from langchain_core.messages import AIMessage, HumanMessage
 
 from app.config import settings
 from app.core.chain import FallbackLoggingCallbackHandler, get_rag_chain
 from app.core.memory import get_chat_memory
+from app.core.stats import log_query
 from app.keyboards import (
     MainMenuCallback,
     get_contact_keyboard,
@@ -29,7 +30,7 @@ router = Router()
 WELCOME_MESSAGE_TEXT = (
     "```python\n"
     "Инициализация...\n"
-    "Протокол Portfolio AI ver 1.1.0 активирован.\n\n"
+    "Протокол Portfolio AI ver 1.3.0 активирован.\n\n"
     "Я — ваш персональный AI-интерфейс к опыту Python-разработчика Александра. "
     "Мои базы данных содержат полные стеки, архитектурные решения и детали реализации проектов.\n\n"
     "Начните с команды 'Hello world!' или задайте свой вопрос,чтобы начать извлечение данных."
@@ -72,6 +73,13 @@ RESET_CONFIRMATION_TEXT = (
 @router.message(CommandStart())
 async def handle_start(message: Message, bot: Bot):
     """Handles the /start command, sending a welcome message with a photo (if configured) and an inline keyboard for primary actions."""
+    await log_query(
+        user_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+        last_name=message.from_user.last_name,
+        query_text="COMMAND: /start",
+    )
     main_keyboard = get_main_keyboard()
 
     photo_path = settings.WELCOME_PHOTO_PATH
@@ -94,6 +102,13 @@ async def handle_start(message: Message, bot: Bot):
 @router.message(Command("help"))
 async def handle_help(message: Message):
     """Handles the /help command by sending a static informational message."""
+    await log_query(
+        user_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+        last_name=message.from_user.last_name,
+        query_text="COMMAND: /help",
+    )
     help_keyboard = get_help_keyboard()
 
     photo_path = settings.HELP_PHOTO_PATH
@@ -118,6 +133,13 @@ async def handle_reset(message: Message):
     """
     Handles the /reset command by clearing the user's chat history.
     """
+    await log_query(
+        user_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+        last_name=message.from_user.last_name,
+        query_text="COMMAND: /reset",
+    )
     session_id = str(message.chat.id)
     memory = get_chat_memory(session_id=session_id)
     await memory.chat_memory.clear()
@@ -125,7 +147,7 @@ async def handle_reset(message: Message):
 
 
 async def process_query(
-    chat_id: int, user_question: str, bot: Bot, message_to_answer: Message
+    chat_id: int, user_question: str, bot: Bot, message_to_answer: Message, user: User
 ):
     """A reusable function to process a user's query through the RAG chain.
 
@@ -133,7 +155,8 @@ async def process_query(
         chat_id: The user's chat ID for session management.
         user_question: The question to be processed.
         bot: The Bot instance to send 'typing' action.
-        message_to_answer: The Message object to reply to.
+        message_to_answer: The Message object to reply to or edit.
+        user: The User object of the person who initiated the query.
     """
     # 1. Provide user feedback that the request is being processed
     await bot.send_chat_action(chat_id=chat_id, action="typing")
@@ -143,18 +166,21 @@ async def process_query(
     # Create an instance of the callback handler to log fallbacks
     fallback_logger = FallbackLoggingCallbackHandler()
     try:
-        ai_response = await rag_chain.ainvoke(
+        result = await rag_chain.ainvoke(
             {"session_id": str(chat_id), "question": user_question},
             # Pass the callback handler to the chain invocation
             config={"callbacks": [fallback_logger]},
         )
+        ai_response = result["answer"]
+        retrieved_context = result["context"]
 
         # 4. Send the generated response based on the configuration setting
         if settings.RESPONSE_AS_CODE_BLOCK:
             # Sanitize the response to prevent breaking the code block and wrap it.
             safe_response = ai_response.replace("```", "`` ` ``")
             formatted_response = f"```\n{safe_response}\n```"
-            await message_to_answer.answer(formatted_response)
+            # Send as a code block, which doesn't need Markdown parsing.
+            await message_to_answer.answer(formatted_response, parse_mode=None)
         elif settings.SANITIZE_RESPONSE:
             # Proactively sanitize the response to make it compatible with MarkdownV2.
             sanitized_response = sanitize_for_telegram_markdown(ai_response)
@@ -181,7 +207,18 @@ async def process_query(
                 )
                 await message_to_answer.answer(ai_response, parse_mode=None)
 
-        # 5. Manually save the context to the chat history
+        # 5. Log the query and response to the statistics database
+        await log_query(
+            user_id=user.id,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            query_text=user_question,
+            retrieved_context=retrieved_context,
+            llm_response=ai_response,
+        )
+
+        # 6. Manually save the context to the chat history
         # The RAG chain loads history, but saving is handled here.
         memory = get_chat_memory(session_id=str(chat_id))
         await memory.chat_memory.add_messages(
@@ -248,6 +285,13 @@ async def handle_main_menu_button(
 
     match callback_data.action:
         case "hello":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Hello Button",
+            )
             try:
                 # Edit the message to show the static "Hello world!" text and
                 # switch to the alternative keyboard with a "back" button.
@@ -265,6 +309,13 @@ async def handle_main_menu_button(
                     # Re-raise any other TelegramBadRequest errors for debugging.
                     raise
         case "about_portfolio":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Back to Portfolio AI Button",
+            )
             try:
                 # This handles the "back" button from the "Hello world!" view,
                 # returning the user to the initial welcome message and main keyboard.
@@ -290,18 +341,40 @@ async def handle_main_menu_button(
                 user_question=predefined_question,
                 bot=bot,
                 message_to_answer=query.message,
+                user=query.from_user,
             )
         case "projects":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Projects Button",
+            )
             await _edit_message(
                 query.message,
                 "", reply_markup=get_projects_keyboard()
             )
         case "contact":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Contact Button",
+            )
             await _edit_message(
                 query.message,
                 "", reply_markup=get_contact_keyboard()
             )
         case "back_to_main":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Back to Main Menu Button",
+            )
             await _edit_message(
                 query.message,
                 WELCOME_MESSAGE_TEXT,
@@ -315,12 +388,27 @@ async def handle_main_menu_button(
                 user_question=predefined_question,
                 bot=bot,
                 message_to_answer=query.message,
+                user=query.from_user,
             )
         case "restart_session":
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Restart Session Button",
+            )
             # Re-trigger the /start handler to send a fresh welcome message.
             await handle_start(query.message, bot)
         case "reset_chat":
             # Replicate the /reset logic for the callback button.
+            await log_query(
+                user_id=query.from_user.id,
+                username=query.from_user.username,
+                first_name=query.from_user.first_name,
+                last_name=query.from_user.last_name,
+                query_text="CLICK: Reset Chat Button",
+            )
             session_id = str(query.message.chat.id)
             memory = get_chat_memory(session_id=session_id)
             await memory.chat_memory.clear()
@@ -343,4 +431,5 @@ async def handle_message(message: Message, bot: Bot):
         user_question=message.text,
         bot=bot,
         message_to_answer=message,
+        user=message.from_user,
     )
