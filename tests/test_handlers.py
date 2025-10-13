@@ -145,10 +145,10 @@ async def test_static_callback_handler(
     mock_callback_query.answer.assert_awaited_once()
     # Проверки
     mock_edit_message.assert_called_once()
-    edit_args = mock_edit_message.call_args
-    assert edit_args.kwargs["message"] == mock_callback_query.message
-    assert edit_args.kwargs["text"] == ""  # Text is empty for projects menu
-    assert edit_args.kwargs["reply_markup"] == mock_keyboard
+    call_args = mock_edit_message.call_args_list[0]
+    assert call_args.args[0] == mock_callback_query.message  # 'message' - первый позиционный аргумент
+    assert call_args.args[1] == ""  # 'text' - второй позиционный аргумент
+    assert call_args.kwargs["reply_markup"] == mock_keyboard  # 'reply_markup' - именованный аргумент
 
     mock_log_query.assert_called_once()
     log_args = mock_log_query.call_args
