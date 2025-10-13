@@ -411,7 +411,7 @@ async def handle_main_menu_button(
                 message_to_answer=query.message,
                 user=query.from_user,
             )
-        case "hards_kills":
+        case "hard_skills":
             predefined_question = "Составь только структурированный список своих хардскилов, исключая конкретную информацию о проектах."
             await process_query(
                 chat_id=query.message.chat.id,

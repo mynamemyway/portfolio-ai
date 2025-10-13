@@ -64,7 +64,7 @@ def get_skills_keyboard() -> InlineKeyboardMarkup:
     """
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="Hard skills", callback_data=MainMenuCallback(action="hards_kills")
+        text="Hard skills", callback_data=MainMenuCallback(action="hard_skills")
     )
     builder.button(
         text="Soft skills", callback_data=MainMenuCallback(action="soft_skills")
