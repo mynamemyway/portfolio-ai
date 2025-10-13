@@ -103,11 +103,11 @@ def get_projects_keyboard() -> InlineKeyboardMarkup:
         text="Tell about PrimeNetworking",
         callback_data=MainMenuCallback(action="show_project_primenet"),
     )
+    builder.button(text="PrimeNetworking on Git", url="https://github.com/mynamemyway/prime-net-docs")
     builder.button(
         text="Tell about Portfolio AI",
         callback_data=MainMenuCallback(action="show_project_portfolio_ai"),
     )
-    builder.button(text="PrimeNetworking on Git", url="https://github.com/mynamemyway/prime-net-docs")
     builder.button(text="Portfolio AI on Git", url="https://github.com/mynamemyway/portfolio-ai")
     builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
     # Arrange the buttons: each on a new line for better readability.
