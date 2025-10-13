@@ -56,13 +56,19 @@ def mock_message():
 @pytest.fixture
 def mock_callback_query(mock_message):
     """Фикстура для создания мок-объекта CallbackQuery."""
-    return CallbackQuery(
-        id="test_callback_id",
-        from_user=mock_message.from_user, # Используем from_user из мок-сообщения
-        message=mock_message,
-        chat_instance="test_chat_instance",
-        data="test_data"
-    )
+    # Используем MagicMock, чтобы избежать проблем с "замороженными" полями
+    callback_query = MagicMock(spec=CallbackQuery)
+    callback_query.id = "test_callback_id"
+    callback_query.from_user = mock_message.from_user
+    callback_query.message = mock_message
+    callback_query.chat_instance = "test_chat_instance"
+    callback_query.data = "test_data"
+
+    # Сразу мокируем метод answer, который будет использоваться в тестах
+    callback_query.answer = AsyncMock()
+
+    return callback_query
+
 
 @patch("app.handlers.user_handlers.log_query")
 @patch("app.handlers.user_handlers.settings")
@@ -82,8 +88,8 @@ async def test_start_command(
 
     # Проверки
     mock_message.answer.assert_called_once()
-    call_args = mock_message.answer.call_args
-    assert "Инициализация" in call_args.kwargs["text"]
+    call_args = mock_message.answer.call_args_list[0]
+    assert "Инициализация" in call_args.args[0]  # Аргумент 'text' является позиционным
     assert call_args.kwargs["reply_markup"] == mock_keyboard
 
     mock_log_query.assert_called_once()
@@ -110,8 +116,8 @@ async def test_reset_command(mock_get_chat_memory, mock_log_query, mock_message)
     mock_memory.chat_memory.clear.assert_called_once()
 
     mock_message.answer.assert_called_once()
-    call_args = mock_message.answer.call_args
-    assert "INFO: History successfully cleared" in call_args.kwargs["text"]
+    call_args = mock_message.answer.call_args_list[0]
+    assert "INFO: History successfully cleared" in call_args.args[0] # Аргумент 'text' является позиционным
 
     mock_log_query.assert_called_once()
     log_args = mock_log_query.call_args
@@ -130,9 +136,6 @@ async def test_static_callback_handler(
     callback_data = MainMenuCallback(action="projects")
     mock_keyboard = MagicMock(spec=InlineKeyboardMarkup)
     mock_get_projects_keyboard.return_value = mock_keyboard
-
-    # Мокируем метод answer, чтобы избежать ошибки "not mounted"
-    mock_callback_query.answer = AsyncMock()
 
     # Вызов обработчика
     await user_handlers.handle_main_menu_button(
@@ -159,8 +162,6 @@ async def test_rag_callback_handler(mock_process_query, mock_bot, mock_callback_
     # Настройка моков
     callback_data = MainMenuCallback(action="skills")
     mock_process_query.return_value = None
-    # Мокируем метод answer, чтобы избежать ошибки "not mounted"
-    mock_callback_query.answer = AsyncMock()
 
     # Вызов обработчика
     await user_handlers.handle_main_menu_button(
