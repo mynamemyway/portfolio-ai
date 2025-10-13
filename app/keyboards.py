@@ -56,6 +56,24 @@ def get_hello_world_keyboard() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+def get_skills_keyboard() -> InlineKeyboardMarkup:
+    """
+    Builds and returns the skills submenu inline keyboard.
+
+    This keyboard allows the user to choose between viewing hard skills or soft skills.
+    """
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="Hard skills", callback_data=MainMenuCallback(action="hards_kills")
+    )
+    builder.button(
+        text="Soft skills", callback_data=MainMenuCallback(action="soft_skills")
+    )
+    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
+    builder.adjust(2, 1)
+    return builder.as_markup()
+
+
 def get_contact_keyboard() -> InlineKeyboardMarkup:
     """
     Builds and returns the contact information inline keyboard.
