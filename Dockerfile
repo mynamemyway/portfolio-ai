@@ -27,8 +27,11 @@ WORKDIR /app
 # Copy the installed dependencies from the builder stage
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 
-# Copy the application code
-COPY . .
+# Copy the application code from the 'app' directory into the container's working directory
+COPY app/ .
+
+# Copy the main entrypoint script into the container's working directory
+COPY main.py .
 
 # Command to run the application
 CMD ["python", "main.py"]
