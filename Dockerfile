@@ -1,37 +1,28 @@
-# Stage 1: Builder - Install dependencies
-FROM python:3.12-slim as builder
+# Dockerfile
+FROM python:3.12-slim
 
-# Set environment variables
-# Prevents Python from writing .pyc files to disc
-ENV PYTHONDONTWRITEBYTECODE 1
-# Ensures that the python output is sent straight to the terminal without buffering
-ENV PYTHONUNBUFFERED 1
+# Установим зависимости ОС, если вдруг понадобятся (для некоторых пакетов)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
+# Рабочая директория
 WORKDIR /app
 
-# Upgrade pip
-RUN pip install --upgrade pip
+# Переменные окружения для Python
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Copy the requirements file and install dependencies
-# This is done in a separate step to leverage Docker's layer caching.
-# The dependencies will only be re-installed if requirements.txt changes.
+# Копируем зависимости и устанавливаем
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Stage 2: Final - Create the final lightweight image
-FROM python:3.12-slim as final
-
-WORKDIR /app
-
-# Copy the installed dependencies from the builder stage
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-
-# Copy the application code from the 'app' directory into the container's working directory
-COPY app/ .
-
-# Copy the main entrypoint script into the container's working directory
+# Копируем код — сохраняем структуру!
+COPY app ./app
 COPY main.py .
+COPY assets ./assets
 
-# Command to run the application
+# Владелец не требуется (работаем от root, но можно добавить non-root user при желании)
+
 CMD ["python", "main.py"]
