@@ -1,0 +1,17 @@
+# docker-compose.yml
+services:
+  bot:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      # ChromaDB: сохраняем векторную БД между перезапусками
+      - ./chroma_db:/app/chroma_db
+      # SQLite: история чатов и статистика
+      - ./app/db:/app/app/db
+      # (опционально) если используете локальные изображения
+      - ./assets:/app/assets
+    restart: unless-stopped
+    # Если бот должен быть доступен извне (например, для вебхуков), раскомментируйте:
+    # ports:
+    #   - "8080:8080"
