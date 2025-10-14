@@ -254,20 +254,25 @@ async def _edit_message(
         reply_markup: The new inline keyboard markup.
         photo_path: The path to a new photo to replace the existing one.
     """
-    # Case 1: A new photo is provided, and the message already has media.
+    # Case 1: The text is empty. This is a signal to only change the keyboard.
+    # This is the most efficient way and avoids parsing errors.
+    if not text:
+        await message.edit_reply_markup(reply_markup=reply_markup)
+
+    # Case 2: A new photo is provided, and the message already has media.
     # We use edit_media to replace the photo, caption, and keyboard.
-    if photo_path and Path(photo_path).is_file() and message.photo:
+    elif photo_path and Path(photo_path).is_file() and message.photo:
         photo = FSInputFile(photo_path)
         # Create a specific InputMediaPhoto object as required by the API.
         media = InputMediaPhoto(media=photo, caption=text)
         await message.edit_media(media=media, reply_markup=reply_markup)
 
-    # Case 2: No new photo is provided, but the message has a caption.
+    # Case 3: No new photo is provided, but the message has a caption.
     # We only edit the caption and keyboard.
     elif message.caption:
         await message.edit_caption(caption=text, reply_markup=reply_markup)
 
-    # Case 3: The message is a simple text message.
+    # Case 4: The message is a simple text message.
     # We edit the text and keyboard.
     else:
         await message.edit_text(text=text, reply_markup=reply_markup)

@@ -16,6 +16,7 @@ class MainMenuCallback(CallbackData, prefix="main_menu"):
         action (str): The specific action associated with the button (e.g., 'skills').
     """
     action: str
+    from_menu: str | None = None
 
 
 def get_main_keyboard() -> InlineKeyboardMarkup:
@@ -45,7 +46,7 @@ def get_hello_world_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     # This button returns the user to the initial welcome message.
     builder.button(
-        text="⬅️ About bot", callback_data=MainMenuCallback(action="about_portfolio")
+        text="⬅️ About bot", callback_data=MainMenuCallback(action="back_to_main", from_menu="hello_world")
     )
     builder.button(text="👋 AI about me", callback_data=MainMenuCallback(action="about_me"))
     builder.button(text="Skills", callback_data=MainMenuCallback(action="skills"))
@@ -69,7 +70,7 @@ def get_skills_keyboard() -> InlineKeyboardMarkup:
     builder.button(
         text="Soft skills", callback_data=MainMenuCallback(action="soft_skills")
     )
-    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
+    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main", from_menu="submenu"))
     builder.adjust(2, 1)
     return builder.as_markup()
 
@@ -85,7 +86,7 @@ def get_contact_keyboard() -> InlineKeyboardMarkup:
     builder.button(text="GitHub", url="https://github.com/mynamemyway")
     builder.button(text="Telegram", url="https://t.me/mynamemyway")
     builder.button(text="Instagram", url="https://instagram.com/myname_myway")
-    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
+    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main", from_menu="submenu"))
     # Arrange the buttons: 3 links in the first row, 1 back button in the second.
     builder.adjust(3, 1)
     return builder.as_markup()
@@ -109,7 +110,7 @@ def get_projects_keyboard() -> InlineKeyboardMarkup:
         callback_data=MainMenuCallback(action="show_project_portfolio_ai"),
     )
     builder.button(text="Portfolio AI on Git", url="https://github.com/mynamemyway/portfolio-ai")
-    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
+    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main", from_menu="submenu"))
     # Arrange the buttons: each on a new line for better readability.
     builder.adjust(1, 1, 1, 1, 1)
     return builder.as_markup()
@@ -131,6 +132,6 @@ def get_help_keyboard() -> InlineKeyboardMarkup:
         text="🔄 Restart",
         callback_data=MainMenuCallback(action="restart_session"),
     )
-    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main"))
+    builder.button(text="⬅️ Return", callback_data=MainMenuCallback(action="back_to_main", from_menu="submenu"))
     builder.adjust(2, 2)
     return builder.as_markup()
