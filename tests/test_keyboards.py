@@ -36,7 +36,7 @@ def test_get_hello_world_keyboard():
 
     assert "⬅️ About bot" in buttons
     assert buttons["⬅️ About bot"].callback_data == MainMenuCallback(
-        action="about_portfolio"
+        action="back_to_main", from_menu="hello_world"
     ).pack()
 
 
@@ -53,7 +53,7 @@ def test_get_projects_keyboard():
     ).pack()
     assert "⬅️ Return" in buttons
     assert buttons["⬅️ Return"].callback_data == MainMenuCallback(
-        action="back_to_main"
+        action="back_to_main", from_menu="submenu"
     ).pack()
 
 
