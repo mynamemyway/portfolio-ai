@@ -75,6 +75,7 @@ scp /Users/aleksandrsamohvalov/Documents/GitHub/portfolio-ai/app/knowledge_base/
 
 ```bash
 sudo rm -rf ~/portfolio-ai/chroma_db
+ls -ld ~/portfolio-ai/chroma_db
 ```
 
 4.  **Запустите процесс переиндексации.** Скрипт `rag.py` **автоматически удалит старую векторную базу** и создаст новую на основе загруженных вами файлов.
