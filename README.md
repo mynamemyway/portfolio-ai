@@ -2,7 +2,7 @@
 
 <p align="left">
   <img src="https://img.shields.io/badge/Status-Active-green" alt="Status">
-  <img src="https://img.shields.io/badge/Version-1.4.2-blueviolet" alt="Version">
+  <img src="https://img.shields.io/badge/Version-1.4.1-blueviolet" alt="Version">
   <img src="https://img.shields.io/badge/Build-Passing-brightgreen" alt="Build">
 </p>
 
