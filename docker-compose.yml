@@ -10,6 +10,8 @@ services:
       - ./chroma_db:/app/chroma_db
       # SQLite: история чатов и статистика
       - ./app/db:/app/app/db
+      # Knowledge Base: монтируем документы для RAG, чтобы видеть обновления
+      - ./app/knowledge_base:/app/app/knowledge_base
       # (опционально) если используете локальные изображения
       - ./assets:/app/assets
     restart: unless-stopped
