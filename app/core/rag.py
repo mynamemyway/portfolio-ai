@@ -6,7 +6,6 @@ import logging
 import httpx
 from typing import List, Any
 import time
-import shutil
 
 from langchain_community.document_loaders import TextLoader # Keep for now, will be replaced later
 from langchain_core.embeddings import Embeddings
@@ -143,33 +142,19 @@ def get_vector_store() -> Chroma:
 async def create_vector_store():
     """
     Orchestrates the entire process of creating the vector store:
-    1. Deletes the old vector store directory if it exists.
-    2. Loads and splits documents from the knowledge base.
-    3. Initializes the vector store.
-    4. Adds the documents to the store, triggering vectorization.
+    1. Loads and splits documents from the knowledge base.
+    2. Initializes the vector store.
+    3. Adds the documents to the store, triggering vectorization.
     """
     logging.info("Starting to create vector store...")
 
-    # 1. Clean up the old vector store directory if it exists to ensure a fresh start.
-    # This is crucial for preventing data duplication and inconsistencies.
-    if CHROMA_PERSIST_DIR.is_dir():
-        logging.warning(
-            f"Existing vector store found at '{CHROMA_PERSIST_DIR}'. "
-            "Deleting it to ensure a clean build."
-        )
-        try:
-            shutil.rmtree(CHROMA_PERSIST_DIR)
-            logging.info("Successfully deleted old vector store.")
-        except OSError as e:
-            logging.error(f"Error deleting directory {CHROMA_PERSIST_DIR}: {e}")
-            # Exit if we can't delete the old directory, as it will cause issues.
-            return
-
-    # 2. Load and split documents
+    # 1. Load and split documents
     chunked_documents = _load_and_split_documents()
 
     if not chunked_documents:
-        logging.warning("No documents found or processed. Vector store not created.")
+        logging.warning(
+            "No documents found or processed. Vector store not created."
+        )
         return
 
     logging.info(f"Loaded and split {len(chunked_documents)} document chunks.")
@@ -177,7 +162,7 @@ async def create_vector_store():
     # 2. Get the vector store instance
     vector_store = get_vector_store()
 
-    # 4. Add documents to the vector store in batches to avoid rate limiting
+    # 3. Add documents to the vector store in batches to avoid rate limiting
     logging.info("Adding documents to the vector store in batches...")
     total_chunks = len(chunked_documents)
     num_batches = (total_chunks + EMBEDDING_BATCH_SIZE - 1) // EMBEDDING_BATCH_SIZE
