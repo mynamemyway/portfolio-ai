@@ -12,6 +12,7 @@ from langchain_community.document_loaders import TextLoader # Keep for now, will
 from langchain_core.embeddings import Embeddings
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_chroma import Chroma
 
 from app.config import settings
 
@@ -130,9 +131,6 @@ def get_vector_store() -> Chroma:
     It uses the embedding model created by get_embedding_model and sets up
     a persistent directory to save the database on disk.
     """
-    # Import Chroma here to prevent it from initializing and locking the directory
-    # before the cleanup logic in create_vector_store() has a chance to run.
-    from langchain_chroma import Chroma
     embeddings = get_embedding_model()
     vector_store = Chroma(
         persist_directory=str(CHROMA_PERSIST_DIR), embedding_function=embeddings

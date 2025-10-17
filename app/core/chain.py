@@ -106,6 +106,9 @@ def get_rag_chain():
         ]
     )
 
+    # Initialize the retriever here to ensure it's created only when the chain is built.
+    retriever = get_vector_store().as_retriever()
+
     # 3. Define a function to format retrieved documents
     def format_docs(docs):
         """Converts a list of Document objects into a single string."""
@@ -122,13 +125,10 @@ def get_rag_chain():
     # This chain takes a session_id and a question as input.
     conversational_rag_chain = (
         # Step 1: Prepare the context in parallel: load chat history and retrieve documents.
-        # The retriever is initialized here by calling get_vector_store(), ensuring it's
-        # created only when the chain is actively invoked, not on module import.
         # The result is a dictionary with 'chat_history' and 'context'.
         RunnablePassthrough.assign(
-            chat_history=RunnableLambda(_get_async_chat_history)
-            | itemgetter("chat_history"),
-            context=itemgetter("question") | get_vector_store().as_retriever() | format_docs,
+            chat_history=RunnableLambda(_get_async_chat_history) | itemgetter("chat_history"),
+            context=itemgetter("question") | retriever | format_docs
         )
         # Step 2: Pass the prepared context to the main RAG chain to get the answer.
         # We use assign again to add the 'answer' to the dictionary.
