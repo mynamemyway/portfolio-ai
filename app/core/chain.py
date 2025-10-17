@@ -1,6 +1,5 @@
 # app/core/chain.py
 
-from __future__ import annotations
 import textwrap
 import logging
 from operator import itemgetter
