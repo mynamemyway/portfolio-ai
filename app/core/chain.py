@@ -97,8 +97,6 @@ def get_rag_chain():
     # Create a resilient LLM component with a fallback mechanism
     llm = primary_llm.with_fallbacks([fallback_llm])
 
-    retriever = get_vector_store().as_retriever()
-
     # 2. Define the prompt template
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -107,6 +105,9 @@ def get_rag_chain():
             ("human", "Вопрос: {question}\n\nКонтекст из базы знаний:\n{context}"),
         ]
     )
+
+    # Initialize the retriever here to ensure it's created only when the chain is built.
+    retriever = get_vector_store().as_retriever()
 
     # 3. Define a function to format retrieved documents
     def format_docs(docs):
