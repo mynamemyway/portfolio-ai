@@ -4,6 +4,7 @@ import asyncio
 import sys
 import logging
 import httpx
+import shutil
 from typing import List, Any
 import time
 
@@ -142,13 +143,28 @@ def get_vector_store() -> Chroma:
 async def create_vector_store():
     """
     Orchestrates the entire process of creating the vector store:
-    1. Loads and splits documents from the knowledge base.
-    2. Initializes the vector store.
-    3. Adds the documents to the store, triggering vectorization.
+    1. Deletes the old vector store directory to ensure a clean build.
+    2. Loads and splits documents from the knowledge base.
+    3. Initializes the vector store.
+    4. Adds the documents to the store, triggering vectorization.
     """
     logging.info("Starting to create vector store...")
 
-    # 1. Load and split documents
+    # 1. Clean up the old vector store directory if it exists.
+    # This is crucial for preventing data duplication and inconsistencies.
+    if CHROMA_PERSIST_DIR.is_dir():
+        logging.warning(
+            f"Existing vector store found at '{CHROMA_PERSIST_DIR}'. "
+            "Deleting it to ensure a clean build."
+        )
+        try:
+            shutil.rmtree(CHROMA_PERSIST_DIR)
+            logging.info("Successfully deleted old vector store.")
+        except OSError as e:
+            logging.error(f"Error deleting directory {CHROMA_PERSIST_DIR}: {e}")
+            return  # Exit if we can't delete the old directory.
+
+    # 2. Load and split documents
     chunked_documents = _load_and_split_documents()
 
     if not chunked_documents:
@@ -159,10 +175,10 @@ async def create_vector_store():
 
     logging.info(f"Loaded and split {len(chunked_documents)} document chunks.")
 
-    # 2. Get the vector store instance
+    # 3. Get the vector store instance
     vector_store = get_vector_store()
 
-    # 3. Add documents to the vector store in batches to avoid rate limiting
+    # 4. Add documents to the vector store in batches to avoid rate limiting
     logging.info("Adding documents to the vector store in batches...")
     total_chunks = len(chunked_documents)
     num_batches = (total_chunks + EMBEDDING_BATCH_SIZE - 1) // EMBEDDING_BATCH_SIZE
