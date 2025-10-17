@@ -1,5 +1,6 @@
 # app/core/rag.py
 
+from __future__ import annotations
 import asyncio
 import sys
 import logging
