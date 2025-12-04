@@ -20,10 +20,10 @@ class Settings(BaseSettings):
     # The specific chat model to use from OpenRouter
     # Best="google/gemini-2.0-flash-exp:free"
     # Second="mistralai/mistral-medium-3.1"
-    OPENROUTER_CHAT_MODEL: str = "mistralai/mistral-7b-instruct:free"
+    OPENROUTER_CHAT_MODEL: str = "mistralai/mistral-small-3.1-24b-instruct:free"
     
     # The fallback model to use if the primary model fails
-    OPENROUTER_FALLBACK_MODEL: str = "mistralai/mistral-small-3.1-24b-instruct:free"
+    OPENROUTER_FALLBACK_MODEL: str = "mistralai/mistral-7b-instruct:free"
     
     # The base URL for the OpenRouter API
     OPENROUTER_API_BASE: str = "https://openrouter.ai/api/v1"
