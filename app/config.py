@@ -19,9 +19,19 @@ class Settings(BaseSettings):
     
     # The specific chat model to use from OpenRouter
     # Best="google/gemini-2.0-flash-exp:free"
-    # Second="mistralai/mistral-medium-3.1"
-    OPENROUTER_CHAT_MODEL: str = "mistralai/mistral-small-3.1-24b-instruct:free"
-    
+    # Second="mistralai/mistral-small-3.1-24b-instruct:free"
+
+    # update for work
+    # tngtech/deepseek-r1t2-chimera:free
+    # tngtech/deepseek-r1t-chimera:free
+    # z-ai/glm-4.5-air:free
+    # amazon/nova-2-lite-v1:free
+    # mistralai/mistral-7b-instruct:free
+    # openai/gpt-oss-20b:free
+    # google/gemma-3-27b-it:free
+
+    OPENROUTER_CHAT_MODEL: str = "openai/gpt-oss-20b:free"
+
     # The fallback model to use if the primary model fails
     OPENROUTER_FALLBACK_MODEL: str = "mistralai/mistral-7b-instruct:free"
     
