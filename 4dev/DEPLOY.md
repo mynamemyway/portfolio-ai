@@ -50,6 +50,10 @@ scp .env mynamemyway@91.206.14.93:/home/mynamemyway/portfolio-ai/
     ```bash
     docker-compose up -d
     ```
+7. **Проверьте логи**
+    ```bash
+    docker logs -f portfolio-ai-bot
+    ```
 
 ---
 
@@ -89,4 +93,9 @@ ls -ld ~/portfolio-ai/chroma_db
 5.  **Запустите бота с обновленной базой знаний.**
     ```bash
     docker-compose up -d
+    ```
+
+6. **Проверьте логи**
+    ```bash
+    docker logs -f portfolio-ai-bot
     ```
