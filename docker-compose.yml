@@ -2,7 +2,7 @@
 services:
   bot:
     build: .
-    container_name: portfolio-ai-bot
+    container_name: ai-portfolio-bot
     env_file:
       - .env
     volumes:
