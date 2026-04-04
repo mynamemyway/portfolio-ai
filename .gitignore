@@ -205,3 +205,5 @@ cython_debug/
 .cursorindexingignore
 file:test_db\?mode=memory&cache=shared
 .aider*
+.lsp.json
+temp.md
