@@ -204,3 +204,4 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 file:test_db\?mode=memory&cache=shared
+.aider*
