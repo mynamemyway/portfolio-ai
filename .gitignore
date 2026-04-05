@@ -208,3 +208,4 @@ file:test_db\?mode=memory&cache=shared
 .lsp.json
 temp.md
 /.pi-lens
+5dev/
