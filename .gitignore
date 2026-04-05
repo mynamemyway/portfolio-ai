@@ -207,3 +207,4 @@ file:test_db\?mode=memory&cache=shared
 .aider*
 .lsp.json
 temp.md
+/.pi-lens
