@@ -109,7 +109,7 @@ def get_rag_chain():
     )
 
     # 3. Define a function to format retrieved documents
-    def format_docs(docs):
+    def format_docs(docs: list) -> str:
         """Converts a list of Document objects into a single string."""
         return "\n\n".join(doc.page_content for doc in docs)
 

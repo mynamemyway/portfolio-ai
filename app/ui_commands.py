@@ -4,7 +4,7 @@ from aiogram import Bot
 from aiogram.types import BotCommand
 
 
-async def set_ui_commands(bot: Bot):
+async def set_ui_commands(bot: Bot) -> None:
     """
     Sets the UI commands for the bot in the Telegram menu.
 

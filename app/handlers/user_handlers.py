@@ -73,7 +73,7 @@ RESET_CONFIRMATION_TEXT = (
 
 
 @router.message(CommandStart())
-async def handle_start(message: Message, bot: Bot):
+async def handle_start(message: Message, bot: Bot) -> None:
     """Handles the /start command, sending a welcome message with a photo (if configured) and an inline keyboard for primary actions."""
     await log_query(
         user_id=message.from_user.id,
@@ -102,7 +102,7 @@ async def handle_start(message: Message, bot: Bot):
 
 
 @router.message(Command("help"))
-async def handle_help(message: Message):
+async def handle_help(message: Message) -> None:
     """Handles the /help command by sending a static informational message."""
     await log_query(
         user_id=message.from_user.id,
@@ -131,7 +131,7 @@ async def handle_help(message: Message):
 
 
 @router.message(Command("reset"))
-async def handle_reset(message: Message):
+async def handle_reset(message: Message) -> None:
     """
     Handles the /reset command by clearing the user's chat history.
     """
@@ -150,7 +150,7 @@ async def handle_reset(message: Message):
 
 async def process_query(
     chat_id: int, user_question: str, bot: Bot, message_to_answer: Message, user: User
-):
+) -> None:
     """A reusable function to process a user's query through the RAG chain.
 
     Args:
@@ -244,7 +244,7 @@ async def _edit_message(
     text: str,
     reply_markup: InlineKeyboardMarkup | None = None,
     photo_path: str | None = None,
-):
+) -> None:
     """
     A helper function to edit a message, handling text, caption, and media changes.
 
@@ -281,7 +281,7 @@ async def _edit_message(
 @router.callback_query(MainMenuCallback.filter())
 async def handle_main_menu_button(
     query: CallbackQuery, callback_data: MainMenuCallback, bot: Bot
-):
+) -> None:
     """Handles presses of the main menu's inline keyboard buttons."""
     # Acknowledge the callback to remove the "loading" state from the button.
     await query.answer()
@@ -463,7 +463,7 @@ async def handle_main_menu_button(
 
 
 @router.message(F.text)
-async def handle_message(message: Message, bot: Bot):
+async def handle_message(message: Message, bot: Bot) -> None:
     """Handles incoming text messages by passing them to the query processor."""
     if not message.text:
         return
